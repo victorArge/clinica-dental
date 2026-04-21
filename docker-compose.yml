@@ -1,0 +1,149 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: clinica_mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: 2004
+      MONGO_INITDB_DATABASE: clinica_dental
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - clinica-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  db:
+    image: postgres:15-alpine
+    container_name: clinica_db
+    environment:
+      POSTGRES_DB: clinica_dental
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 2004
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - clinica-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - postgres
+
+  node1:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: clinica_node1
+    environment:
+      PORT: 3000
+      NODE_NAME: node1
+      LATENCY_MS: 0
+      MONGO_HOST: mongo
+      MONGO_PORT: 27017
+      MONGO_DB: clinica_dental
+      MONGO_USER: admin
+      MONGO_PASSWORD: 2004
+    ports:
+      - "3001:3000"
+    networks:
+      - clinica-net
+    depends_on:
+      mongo:
+        condition: service_healthy
+    profiles:
+      - normal
+      - lento
+      - saturado
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  node2:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: clinica_node2
+    environment:
+      PORT: 3000
+      NODE_NAME: node2
+      LATENCY_MS: 0
+      MONGO_HOST: mongo
+      MONGO_PORT: 27017
+      MONGO_DB: clinica_dental
+      MONGO_USER: admin
+      MONGO_PASSWORD: 2004
+    ports:
+      - "3002:3000"
+    networks:
+      - clinica-net
+    depends_on:
+      mongo:
+        condition: service_healthy
+    profiles:
+      - normal
+      - lento
+      - saturado
+
+  node3:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: clinica_node3
+    environment:
+      PORT: 3000
+      NODE_NAME: node3
+      LATENCY_MS: 0
+      MONGO_HOST: mongo
+      MONGO_PORT: 27017
+      MONGO_DB: clinica_dental
+      MONGO_USER: admin
+      MONGO_PASSWORD: 2004
+    ports:
+      - "3003:3000"
+    networks:
+      - clinica-net
+    depends_on:
+      mongo:
+        condition: service_healthy
+    profiles:
+      - normal
+      - lento
+      - saturado
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: clinica_nginx
+    ports:
+      - "8080:80"
+    networks:
+      - clinica-net
+    depends_on:
+      - node1
+      - node2
+      - node3
+    profiles:
+      - normal
+      - lento
+      - saturado
+
+networks:
+  clinica-net:
+    driver: bridge
+
+volumes:
+  db_data:

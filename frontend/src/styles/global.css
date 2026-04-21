@@ -1,0 +1,193 @@
+/* src/styles/global.css */
+:root {
+  --bg: #0b1020;
+  --surface: rgba(15, 23, 42, 0.65);
+  --card: rgba(15, 23, 42, 0.65);
+  --text: #ffffff;
+  --muted: #cbd5e1;
+  --primary: #d4af37;
+  --primary-2: #1e3a8a;
+  --accent: #b8860b;
+  --green: #10b981;
+  --danger: #ef4444;
+  --radius: 14px;
+  --shadow: 0 8px 32px rgba(0,0,0,.3);
+}
+
+* { box-sizing: border-box; }
+html, body, #app { height: 100%; }
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system;
+  background: url('../assets/clinic-bg.png') no-repeat center center fixed;
+  background-size: cover;
+  color: var(--text);
+}
+
+a { color: var(--primary); text-decoration: none; }
+button { cursor: pointer; }
+
+.app-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+
+.topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,.1);
+  box-shadow: 0 4px 30px rgba(0,0,0,.1);
+}
+
+.brand {
+  display: flex; align-items: center; gap: 12px;
+}
+.brand .logo {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: inline-flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700;
+}
+.brand h1 { font-size: 18px; margin: 0; }
+.brand small { color: var(--muted); }
+
+.sidebar {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-right: 1px solid rgba(255,255,255,.1);
+  padding: 20px;
+}
+.nav {
+  display: grid; gap: 8px;
+}
+.nav a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  color: #e5e7eb;
+}
+.nav a.active {
+  background: rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: var(--primary);
+}
+.icon {
+  width: 20px; height: 20px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+.main {
+  padding: 24px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+.card {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+.card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.kpi {
+  font-size: 28px; font-weight: 700;
+}
+.kpi-label { font-size: 12px; color: var(--muted); }
+
+.input, .select {
+  width: 100%; padding: 10px 12px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.2);
+  background: rgba(2,6,23,.5); color: var(--text);
+}
+.input:focus, .select:focus { outline: 2px solid var(--primary); }
+
+.table {
+  width: 100%; border-collapse: collapse;
+}
+.table th, .table td {
+  padding: 10px; border-bottom: 1px solid rgba(255,255,255,.08);
+  text-align: left;
+}
+.table th { font-size: 12px; color: var(--muted); }
+
+.btn {
+  padding: 10px 14px; border-radius: 8px;
+  border: none; color: white; background: var(--primary);
+}
+.btn.secondary { background: rgba(255,255,255,.15); color: #e2e8f0; }
+
+.avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--primary); display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.btn-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 90%;
+  max-width: 480px;
+  border: 1px solid rgba(255,255,255,.1);
+}
+.modal h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.status-programada { background: rgba(14,165,233,.2); color: var(--primary-2); }
+.status-completada { background: rgba(16,185,129,.2); color: var(--green); }
+.status-cancelada { background: rgba(239,68,68,.2); color: var(--danger); }
+
+@media (max-width: 900px) {
+  .app-layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+}

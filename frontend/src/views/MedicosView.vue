@@ -5,230 +5,181 @@
         <h2>Médicos</h2>
         <p class="subtitle">Gestiona los médicos de la clínica</p>
       </div>
-      <button class="btn" @click="openModal()">+ Nuevo Médico</button>
+      <BaseButton @click="openModal()">+ Nuevo Médico</BaseButton>
     </div>
 
-    <div class="card">
-      <div class="search-bar">
-        <input 
-          v-model="search" 
-          type="text" 
-          class="input" 
-          placeholder="Buscar médico..."
-        >
-      </div>
+    <BaseCard>
+      <BaseTable
+        :columns="columns"
+        :data="medicos"
+        :loading="loading"
+        searchable
+        search-placeholder="Buscar médico..."
+        :search-keys="['nombre', 'apellido', 'especialidad']"
+        @row-click="openModal"
+      >
+        <template #header>
+          <h3 style="margin: 0; font-size: var(--text-lg);">Lista de Médicos</h3>
+        </template>
 
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Especialidad</th>
-            <th>Teléfono</th>
-            <th>Email</th>
-            <th>Matrícula</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="medico in filteredMedicos" :key="medico.id">
-            <td>{{ medico.id }}</td>
-            <td>
-              <div class="patient-cell">
-                <div class="avatar" style="background: var(--accent);">{{ getInitials(medico.nombre) }}</div>
-                {{ medico.nombre }} {{ medico.apellido }}
-              </div>
-            </td>
-            <td><span class="badge">{{ medico.especialidad }}</span></td>
-            <td>{{ medico.telefono || '-' }}</td>
-            <td>{{ medico.email || '-' }}</td>
-            <td>{{ medico.matricula }}</td>
-            <td>
-              <div class="actions">
-                <button class="btn-icon" @click="openModal(medico)" title="Editar">✏️</button>
-                <button class="btn-icon danger" @click="deleteMedicoConfirm(medico.id)" title="Eliminar">🗑️</button>
-              </div>
-            </td>
-          </tr>
-          <tr v-if="filteredMedicos.length === 0">
-            <td colspan="7" style="text-align: center; color: var(--muted);">
-              No hay médicos registrados
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+        <template #cell-nombre="{ row }">
+          <div class="patient-cell">
+            <div class="avatar" style="background: var(--accent);">{{ getInitials(row.nombre) }}</div>
+            {{ row.nombre }} {{ row.apellido }}
+          </div>
+        </template>
 
-    <!-- Modal -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal">
-        <h3>{{ editing ? 'Editar' : 'Nuevo' }} Médico</h3>
-        <form @submit.prevent="saveMedico">
-          <div class="form-group">
-            <label>Nombre *</label>
-            <input v-model="form.nombre" class="input" required>
+        <template #cell-especialidad="{ value }">
+          <BaseBadge variant="primary">{{ value }}</BaseBadge>
+        </template>
+
+        <template #cell-telefono="{ value }">{{ value || '-' }}</template>
+        <template #cell-email="{ value }">{{ value || '-' }}</template>
+
+        <template #cell-acciones="{ row }">
+          <div class="actions">
+            <BaseButton variant="ghost" size="sm" icon-only @click.stop="openModal(row)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </BaseButton>
+            <BaseButton variant="ghost" size="sm" icon-only @click.stop="deleteMedicoConfirm(row.id)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </BaseButton>
           </div>
-          <div class="form-group">
-            <label>Apellido *</label>
-            <input v-model="form.apellido" class="input" required>
+        </template>
+
+        <template #empty>
+          <div class="empty-content">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg>
+            <p>No hay médicos registrados</p>
+            <BaseButton variant="secondary" size="sm" @click="openModal()">Agregar primero</BaseButton>
           </div>
-          <div class="form-group">
-            <label>Especialidad *</label>
-            <select v-model="form.especialidad" class="select" required>
-              <option value="">Seleccionar...</option>
-              <option value="Ortodoncia">Ortodoncia</option>
-              <option value="Endodoncia">Endodoncia</option>
-              <option value="Cirugía Oral">Cirugía Oral</option>
-              <option value="Periodoncia">Periodoncia</option>
-              <option value="Odontología General">Odontología General</option>
-              <option value="Pediatría">Pediatría</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Teléfono</label>
-            <input v-model="form.telefono" class="input">
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input v-model="form.email" type="email" class="input">
-          </div>
-          <div class="form-group">
-            <label>Matrícula *</label>
-            <input v-model="form.matricula" class="input" required>
-          </div>
-          <div class="btn-group">
-            <button type="submit" class="btn">Guardar</button>
-            <button type="button" class="btn secondary" @click="closeModal">Cancelar</button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </template>
+      </BaseTable>
+    </BaseCard>
+
+    <BaseModal v-model="showModal" :title="editing ? 'Editar Médico' : 'Nuevo Médico'">
+      <form @submit.prevent="saveMedico">
+        <BaseInput v-model="form.values.nombre" label="Nombre *" :error="form.errors.nombre" @blur="form.setFieldTouched('nombre')" />
+        <BaseInput v-model="form.values.apellido" label="Apellido *" :error="form.errors.apellido" @blur="form.setFieldTouched('apellido')" />
+        <BaseSelect
+          v-model="form.values.especialidad"
+          label="Especialidad *"
+          :options="especialidades"
+          placeholder="Seleccionar..."
+          :error="form.errors.especialidad"
+          @blur="form.setFieldTouched('especialidad')"
+        />
+        <BaseInput v-model="form.values.telefono" label="Teléfono" />
+        <BaseInput v-model="form.values.email" label="Email" type="email" :error="form.errors.email" @blur="form.setFieldTouched('email')" />
+        <BaseInput v-model="form.values.matricula" label="Matrícula *" :error="form.errors.matricula" @blur="form.setFieldTouched('matricula')" />
+
+        <div class="btn-group">
+          <BaseButton type="submit" :loading="saving">{{ editing ? 'Actualizar' : 'Crear' }}</BaseButton>
+          <BaseButton variant="secondary" @click="closeModal">Cancelar</BaseButton>
+        </div>
+      </form>
+    </BaseModal>
   </div>
 </template>
 
-<script>
-import { ref, computed, onMounted } from 'vue';
+<script setup>
+import { ref, onMounted } from 'vue';
 import { getMedicos, createMedico, updateMedico, deleteMedico } from '../services/api';
+import { useToastStore } from '../stores/useToastStore';
+import { useForm, required, email } from '../composables/useForm';
+import BaseCard from '../components/BaseCard.vue';
+import BaseTable from '../components/BaseTable.vue';
+import BaseButton from '../components/BaseButton.vue';
+import BaseModal from '../components/BaseModal.vue';
+import BaseInput from '../components/BaseInput.vue';
+import BaseSelect from '../components/BaseSelect.vue';
+import BaseBadge from '../components/BaseBadge.vue';
 
-export default {
-  name: 'MedicosView',
-  setup() {
-    const medicos = ref([]);
-    const search = ref('');
-    const showModal = ref(false);
-    const editing = ref(null);
-    const form = ref({
-      nombre: '',
-      apellido: '',
-      especialidad: '',
-      telefono: '',
-      email: '',
-      matricula: ''
-    });
+const toast = useToastStore();
+const medicos = ref([]);
+const loading = ref(false);
+const saving = ref(false);
+const showModal = ref(false);
+const editing = ref(null);
 
-    const loadMedicos = async () => {
-      try {
-        medicos.value = await getMedicos();
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
+const especialidades = [
+  { value: 'Ortodoncia', label: 'Ortodoncia' },
+  { value: 'Endodoncia', label: 'Endodoncia' },
+  { value: 'Cirugía Oral', label: 'Cirugía Oral' },
+  { value: 'Periodoncia', label: 'Periodoncia' },
+  { value: 'Odontología General', label: 'Odontología General' },
+  { value: 'Pediatría', label: 'Pediatría' }
+];
 
-    const filteredMedicos = computed(() => {
-      if (!search.value) return medicos.value;
-      const s = search.value.toLowerCase();
-      return medicos.value.filter(m => 
-        m.nombre?.toLowerCase().includes(s) || 
-        m.apellido?.toLowerCase().includes(s) ||
-        m.especialidad?.toLowerCase().includes(s)
-      );
-    });
+const columns = [
+  { key: 'id', label: 'ID', sortable: true },
+  { key: 'nombre', label: 'Nombre', sortable: true },
+  { key: 'especialidad', label: 'Especialidad', sortable: true },
+  { key: 'telefono', label: 'Teléfono' },
+  { key: 'email', label: 'Email' },
+  { key: 'matricula', label: 'Matrícula' },
+  { key: 'acciones', label: 'Acciones', sortable: false }
+];
 
-    const getInitials = (name) => {
-      if (!name) return '?';
-      return name.charAt(0).toUpperCase();
-    };
+const form = useForm(
+  { nombre: '', apellido: '', especialidad: '', telefono: '', email: '', matricula: '' },
+  { nombre: [required('El nombre es requerido')], apellido: [required('El apellido es requerido')], email: [email('Email inválido')], matricula: [required('La matrícula es requerida')] }
+);
 
-    const openModal = (medico = null) => {
-      if (medico) {
-        editing.value = medico.id;
-        form.value = { ...medico };
-      } else {
-        editing.value = null;
-        form.value = { nombre: '', apellido: '', especialidad: '', telefono: '', email: '', matricula: '' };
-      }
-      showModal.value = true;
-    };
+const loadMedicos = async () => {
+  loading.value = true;
+  try { medicos.value = await getMedicos(); }
+  catch (e) { toast.error('Error cargando médicos'); }
+  finally { loading.value = false; }
+};
 
-    const closeModal = () => {
-      showModal.value = false;
-      editing.value = null;
-    };
+const getInitials = (name) => name ? name.charAt(0).toUpperCase() : '?';
 
-    const saveMedico = async () => {
-      try {
-        if (editing.value) {
-          await updateMedico(editing.value, form.value);
-        } else {
-          await createMedico(form.value);
-        }
-        closeModal();
-        loadMedicos();
-      } catch (error) {
-        console.error('Error guardando:', error);
-      }
-    };
+const openModal = (medico = null) => {
+  if (medico) {
+    editing.value = medico.id;
+    Object.keys(form.values).forEach(k => { form.values[k] = medico[k] ?? ''; });
+  } else {
+    editing.value = null;
+    form.reset();
+  }
+  showModal.value = true;
+};
 
-    const deleteMedicoConfirm = async (id) => {
-      if (confirm('¿Eliminar médico?')) {
-        try {
-          await deleteMedico(id);
-          loadMedicos();
-        } catch (error) {
-          console.error('Error:', error);
-        }
-      }
-    };
+const closeModal = () => { showModal.value = false; editing.value = null; };
 
-    onMounted(loadMedicos);
+const saveMedico = async () => {
+  if (!form.validateAll()) return;
+  saving.value = true;
+  try {
+    if (editing.value) { await updateMedico(editing.value, form.values); toast.success('Médico actualizado'); }
+    else { await createMedico(form.values); toast.success('Médico creado'); }
+    closeModal();
+    loadMedicos();
+  } catch (e) { toast.error('Error guardando médico'); }
+  finally { saving.value = false; }
+};
 
-    return {
-      medicos,
-      search,
-      filteredMedicos,
-      showModal,
-      editing,
-      form,
-      getInitials,
-      openModal,
-      closeModal,
-      saveMedico,
-      deleteMedico: deleteMedicoConfirm
-    };
+const deleteMedicoConfirm = async (id) => {
+  if (confirm('¿Eliminar este médico?')) {
+    try { await deleteMedico(id); toast.success('Médico eliminado'); loadMedicos(); }
+    catch (e) { toast.error('Error eliminando médico'); }
   }
 };
+
+onMounted(loadMedicos);
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-.page-header h2 { margin: 0 0 4px; font-size: 24px; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6); }
+.page-header h2 { margin: 0 0 4px; font-size: var(--text-xl); }
 .subtitle { color: var(--muted); margin: 0; }
-.search-bar { padding: 16px; border-bottom: 1px solid rgba(255,255,255,.08); }
-.patient-cell { display: flex; align-items: center; gap: 10px; }
-.badge {
-  background: rgba(124,58,237,.2);
-  color: var(--accent);
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
+.patient-cell { display: flex; align-items: center; gap: var(--space-3); }
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--primary); display: flex; align-items: center; justify-content: center;
+  font-size: var(--text-sm); font-weight: 600; color: #0b1020;
 }
-.actions { display: flex; gap: 8px; }
-.btn-icon { background: none; border: none; font-size: 16px; padding: 4px 8px; border-radius: 4px; }
-.btn-icon:hover { background: rgba(255,255,255,0.1); }
-.btn-icon.danger:hover { background: rgba(239,68,68,0.2); }
+.actions { display: flex; gap: var(--space-2); }
+.empty-content { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); color: var(--muted); }
 </style>

@@ -5,264 +5,255 @@
         <h2>Citas</h2>
         <p class="subtitle">Programación de citas médico-paciente</p>
       </div>
-      <button class="btn" @click="openModal()">+ Nueva Cita</button>
+      <BaseButton @click="openModal()">+ Nueva Cita</BaseButton>
     </div>
 
     <div class="grid-3">
-      <div class="card mini">
+      <BaseCard class="mini-card" hoverable>
         <div class="stat">
           <span class="kpi">{{ citasProgramadas }}</span>
-          <span class="kpi-label">Programadas</span>
+          <BaseBadge variant="info">Programadas</BaseBadge>
         </div>
-      </div>
-      <div class="card mini">
+      </BaseCard>
+      <BaseCard class="mini-card" hoverable>
         <div class="stat">
           <span class="kpi" style="color: var(--green);">{{ citasCompletadas }}</span>
-          <span class="kpi-label">Completadas</span>
+          <BaseBadge variant="success">Completadas</BaseBadge>
         </div>
-      </div>
-      <div class="card mini">
+      </BaseCard>
+      <BaseCard class="mini-card" hoverable>
         <div class="stat">
           <span class="kpi" style="color: var(--danger);">{{ citasCanceladas }}</span>
-          <span class="kpi-label">Canceladas</span>
+          <BaseBadge variant="danger">Canceladas</BaseBadge>
         </div>
-      </div>
+      </BaseCard>
     </div>
 
-    <div class="card">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Paciente</th>
-            <th>Médico</th>
-            <th>Fecha/Hora</th>
-            <th>Duración</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="cita in citas" :key="cita.id">
-            <td>{{ cita.id }}</td>
-            <td>
-              <div class="patient-cell">
-                <div class="avatar">{{ getInitials(cita.paciente_nombre) }}</div>
-                {{ cita.paciente_nombre }} {{ cita.paciente_apellido }}
-              </div>
-            </td>
-            <td>{{ cita.medico_nombre }} {{ cita.medico_apellido }}</td>
-            <td>{{ formatDate(cita.fecha_hora) }}</td>
-            <td>{{ cita.duracion_minutos }} min</td>
-            <td>
-              <span :class="'status-badge status-' + cita.estado">
-                {{ cita.estado }}
-              </span>
-            </td>
-            <td>
-              <div class="actions">
-                <button class="btn-icon" @click="openModal(cita)" title="Editar">✏️</button>
-                <button class="btn-icon danger" @click="deleteCitaConfirm(cita.id)" title="Eliminar">🗑️</button>
-              </div>
-            </td>
-          </tr>
-          <tr v-if="citas.length === 0">
-            <td colspan="7" style="text-align: center; color: var(--muted);">
-              No hay citas registradas
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <BaseCard>
+      <BaseTable
+        :columns="columns"
+        :data="citas"
+        :loading="loading"
+        @row-click="openModal"
+      >
+        <template #header>
+          <h3 style="margin: 0; font-size: var(--text-lg);">Lista de Citas</h3>
+        </template>
 
-    <!-- Modal -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal">
-        <h3>{{ editing ? 'Editar' : 'Nueva' }} Cita</h3>
-        <form @submit.prevent="saveCita">
-          <div class="form-group">
-            <label>Paciente *</label>
-            <select v-model="form.paciente_id" class="select" required>
-              <option value="">Seleccionar...</option>
-              <option v-for="p in pacientes" :key="p.id" :value="p.id">
-                {{ p.nombre }} {{ p.apellido }}
-              </option>
-            </select>
+        <template #cell-paciente_nombre="{ row }">
+          <div class="patient-cell">
+            <div class="avatar">{{ getInitials(row.paciente_nombre) }}</div>
+            {{ row.paciente_nombre }} {{ row.paciente_apellido }}
           </div>
-          <div class="form-group">
-            <label>Médico *</label>
-            <select v-model="form.medico_id" class="select" required>
-              <option value="">Seleccionar...</option>
-              <option v-for="m in medicos" :key="m.id" :value="m.id">
-                {{ m.nombre }} {{ m.apellido }} - {{ m.especialidad }}
-              </option>
-            </select>
+        </template>
+
+        <template #cell-medico_nombre="{ row }">
+          {{ row.medico_nombre }} {{ row.medico_apellido }}
+        </template>
+
+        <template #cell-fecha_hora="{ value }">{{ formatDate(value) }}</template>
+        <template #cell-duracion_minutos="{ value }">{{ value }} min</template>
+
+        <template #cell-estado="{ value }">
+          <BaseBadge :variant="getEstadoVariant(value)">{{ value }}</BaseBadge>
+        </template>
+
+        <template #cell-acciones="{ row }">
+          <div class="actions">
+            <BaseButton variant="ghost" size="sm" icon-only @click.stop="openModal(row)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </BaseButton>
+            <BaseButton variant="ghost" size="sm" icon-only @click.stop="deleteCitaConfirm(row.id)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </BaseButton>
           </div>
-          <div class="form-group">
-            <label>Fecha y Hora *</label>
-            <input v-model="form.fecha_hora" type="datetime-local" class="input" required>
+        </template>
+
+        <template #empty>
+          <div class="empty-content">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <p>No hay citas registradas</p>
+            <BaseButton variant="secondary" size="sm" @click="openModal()">Programar primera cita</BaseButton>
           </div>
-          <div class="form-group">
-            <label>Duración (minutos)</label>
-            <select v-model="form.duracion_minutos" class="select">
-              <option value="15">15 minutos</option>
-              <option value="30">30 minutos</option>
-              <option value="45">45 minutos</option>
-              <option value="60">1 hora</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Motivo</label>
-            <textarea v-model="form.motivo" class="input" rows="3" placeholder="Motivo de la consulta..."></textarea>
-          </div>
-          <div class="form-group">
-            <label>Estado</label>
-            <select v-model="form.estado" class="select">
-              <option value="programada">Programada</option>
-              <option value="completada">Completada</option>
-              <option value="cancelada">Cancelada</option>
-            </select>
-          </div>
-          <div class="btn-group">
-            <button type="submit" class="btn">Guardar</button>
-            <button type="button" class="btn secondary" @click="closeModal">Cancelar</button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </template>
+      </BaseTable>
+    </BaseCard>
+
+    <BaseModal v-model="showModal" :title="editing ? 'Editar Cita' : 'Nueva Cita'" max-width="520px">
+      <form @submit.prevent="saveCita">
+        <BaseSelect
+          v-model="form.values.paciente_id"
+          label="Paciente *"
+          :options="pacientesOptions"
+          placeholder="Seleccionar paciente..."
+          :error="form.errors.paciente_id"
+          searchable
+          @blur="form.setFieldTouched('paciente_id')"
+        />
+        <BaseSelect
+          v-model="form.values.medico_id"
+          label="Médico *"
+          :options="medicosOptions"
+          placeholder="Seleccionar médico..."
+          :error="form.errors.medico_id"
+          searchable
+          @blur="form.setFieldTouched('medico_id')"
+        />
+        <BaseInput v-model="form.values.fecha_hora" label="Fecha y Hora *" type="datetime-local" :error="form.errors.fecha_hora" @blur="form.setFieldTouched('fecha_hora')" />
+        <BaseSelect
+          v-model="form.values.duracion_minutos"
+          label="Duración"
+          :options="duracionOptions"
+        />
+        <BaseInput v-model="form.values.motivo" label="Motivo" placeholder="Motivo de la consulta..." />
+        <BaseSelect
+          v-model="form.values.estado"
+          label="Estado"
+          :options="estadoOptions"
+        />
+
+        <div class="btn-group">
+          <BaseButton type="submit" :loading="saving">{{ editing ? 'Actualizar' : 'Crear' }}</BaseButton>
+          <BaseButton variant="secondary" @click="closeModal">Cancelar</BaseButton>
+        </div>
+      </form>
+    </BaseModal>
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, computed, onMounted } from 'vue';
 import { getCitas, getPacientes, getMedicos, createCita, updateCita, deleteCita } from '../services/api';
+import { useToastStore } from '../stores/useToastStore';
+import { useForm, required } from '../composables/useForm';
+import BaseCard from '../components/BaseCard.vue';
+import BaseTable from '../components/BaseTable.vue';
+import BaseButton from '../components/BaseButton.vue';
+import BaseModal from '../components/BaseModal.vue';
+import BaseInput from '../components/BaseInput.vue';
+import BaseSelect from '../components/BaseSelect.vue';
+import BaseBadge from '../components/BaseBadge.vue';
 
-export default {
-  name: 'CitasView',
-  setup() {
-    const citas = ref([]);
-    const pacientes = ref([]);
-    const medicos = ref([]);
-    const showModal = ref(false);
-    const editing = ref(null);
-    const form = ref({
-      paciente_id: '',
-      medico_id: '',
-      fecha_hora: '',
-      duracion_minutos: 30,
-      motivo: '',
-      estado: 'programada'
-    });
+const toast = useToastStore();
+const citas = ref([]);
+const pacientes = ref([]);
+const medicos = ref([]);
+const loading = ref(false);
+const saving = ref(false);
+const showModal = ref(false);
+const editing = ref(null);
 
-    const loadData = async () => {
-      try {
-        const [resCitas, resPacientes, resMedicos] = await Promise.all([
-          getCitas(),
-          getPacientes(),
-          getMedicos()
-        ]);
-        citas.value = resCitas;
-        pacientes.value = resPacientes;
-        medicos.value = resMedicos;
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
+const especialidades = [
+  { value: 'Ortodoncia', label: 'Ortodoncia' },
+  { value: 'Endodoncia', label: 'Endodoncia' },
+  { value: 'Cirugía Oral', label: 'Cirugía Oral' },
+  { value: 'Periodoncia', label: 'Periodoncia' },
+  { value: 'Odontología General', label: 'Odontología General' },
+  { value: 'Pediatría', label: 'Pediatría' }
+];
 
-    const citasProgramadas = computed(() => citas.value.filter(c => c.estado === 'programada').length);
-    const citasCompletadas = computed(() => citas.value.filter(c => c.estado === 'completada').length);
-    const citasCanceladas = computed(() => citas.value.filter(c => c.estado === 'cancelada').length);
+const pacientesOptions = computed(() => pacientes.value.map(p => ({ value: p.id, label: `${p.nombre} ${p.apellido}` })));
+const medicosOptions = computed(() => medicos.value.map(m => ({ value: m.id, label: `${m.nombre} ${m.apellido} - ${m.especialidad}` })));
+const duracionOptions = [
+  { value: 15, label: '15 minutos' },
+  { value: 30, label: '30 minutos' },
+  { value: 45, label: '45 minutos' },
+  { value: 60, label: '1 hora' }
+];
+const estadoOptions = [
+  { value: 'programada', label: 'Programada' },
+  { value: 'completada', label: 'Completada' },
+  { value: 'cancelada', label: 'Cancelada' }
+];
 
-    const getInitials = (name) => {
-      if (!name) return '?';
-      return name.charAt(0).toUpperCase();
-    };
+const columns = [
+  { key: 'id', label: 'ID', sortable: true },
+  { key: 'paciente_nombre', label: 'Paciente', sortable: true },
+  { key: 'medico_nombre', label: 'Médico' },
+  { key: 'fecha_hora', label: 'Fecha/Hora', sortable: true },
+  { key: 'duracion_minutos', label: 'Duración' },
+  { key: 'estado', label: 'Estado', sortable: true },
+  { key: 'acciones', label: 'Acciones', sortable: false }
+];
 
-    const formatDate = (dateStr) => {
-      if (!dateStr) return '-';
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    };
+const form = useForm(
+  { paciente_id: '', medico_id: '', fecha_hora: '', duracion_minutos: 30, motivo: '', estado: 'programada' },
+  { paciente_id: [required('El paciente es requerido')], medico_id: [required('El médico es requerido')], fecha_hora: [required('La fecha es requerida')] }
+);
 
-    const openModal = (cita = null) => {
-      if (cita) {
-        editing.value = cita.id;
-        form.value = {
-          paciente_id: cita.paciente_id,
-          medico_id: cita.medico_id,
-          fecha_hora: cita.fecha_hora?.slice(0, 16),
-          duracion_minutos: cita.duracion_minutos || 30,
-          motivo: cita.motivo || '',
-          estado: cita.estado
-        };
-      } else {
-        editing.value = null;
-        form.value = { paciente_id: '', medico_id: '', fecha_hora: '', duracion_minutos: 30, motivo: '', estado: 'programada' };
-      }
-      showModal.value = true;
-    };
+const loadData = async () => {
+  loading.value = true;
+  try {
+    const [resCitas, resPacientes, resMedicos] = await Promise.all([getCitas(), getPacientes(), getMedicos()]);
+    citas.value = resCitas;
+    pacientes.value = resPacientes;
+    medicos.value = resMedicos;
+  } catch (e) { toast.error('Error cargando datos'); }
+  finally { loading.value = false; }
+};
 
-    const closeModal = () => {
-      showModal.value = false;
-      editing.value = null;
-    };
+const citasProgramadas = computed(() => citas.value.filter(c => c.estado === 'programada').length);
+const citasCompletadas = computed(() => citas.value.filter(c => c.estado === 'completada').length);
+const citasCanceladas = computed(() => citas.value.filter(c => c.estado === 'cancelada').length);
 
-    const saveCita = async () => {
-      try {
-        if (editing.value) {
-          await updateCita(editing.value, form.value);
-        } else {
-          await createCita(form.value);
-        }
-        closeModal();
-        loadData();
-      } catch (error) {
-        console.error('Error guardando:', error);
-      }
-    };
+const getInitials = (name) => name ? name.charAt(0).toUpperCase() : '?';
+const getEstadoVariant = (estado) => ({ programada: 'info', completada: 'success', cancelada: 'danger' }[estado] || 'default');
 
-    const deleteCitaConfirm = async (id) => {
-      if (confirm('¿Eliminar cita?')) {
-        try {
-          await deleteCita(id);
-          loadData();
-        } catch (error) {
-          console.error('Error:', error);
-        }
-      }
-    };
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+};
 
-    onMounted(loadData);
+const openModal = (cita = null) => {
+  if (cita) {
+    editing.value = cita.id;
+    Object.keys(form.values).forEach(k => { form.values[k] = cita[k] ?? form.values[k]; });
+    if (cita.fecha_hora) form.values.fecha_hora = cita.fecha_hora?.slice(0, 16);
+  } else {
+    editing.value = null;
+    form.reset();
+  }
+  showModal.value = true;
+};
 
-    return {
-      citas, pacientes, medicos, showModal, editing, form,
-      citasProgramadas, citasCompletadas, citasCanceladas,
-      getInitials, formatDate, openModal, closeModal, saveCita, deleteCita: deleteCitaConfirm
-    };
+const closeModal = () => { showModal.value = false; editing.value = null; };
+
+const saveCita = async () => {
+  if (!form.validateAll()) return;
+  saving.value = true;
+  try {
+    if (editing.value) { await updateCita(editing.value, form.values); toast.success('Cita actualizada'); }
+    else { await createCita(form.values); toast.success('Cita creada'); }
+    closeModal();
+    loadData();
+  } catch (e) { toast.error('Error guardando cita'); }
+  finally { saving.value = false; }
+};
+
+const deleteCitaConfirm = async (id) => {
+  if (confirm('¿Eliminar esta cita?')) {
+    try { await deleteCita(id); toast.success('Cita eliminada'); loadData(); }
+    catch (e) { toast.error('Error eliminando cita'); }
   }
 };
+
+onMounted(loadData);
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-.page-header h2 { margin: 0 0 4px; font-size: 24px; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6); }
+.page-header h2 { margin: 0 0 4px; font-size: var(--text-xl); }
 .subtitle { color: var(--muted); margin: 0; }
-.card.mini { text-align: center; padding: 20px; }
-.card.mini .stat { display: flex; flex-direction: column; gap: 4px; }
-.patient-cell { display: flex; align-items: center; gap: 10px; }
-.actions { display: flex; gap: 8px; }
-.btn-icon { background: none; border: none; font-size: 16px; padding: 4px 8px; border-radius: 4px; }
-.btn-icon:hover { background: rgba(255,255,255,0.1); }
-.btn-icon.danger:hover { background: rgba(239,68,68,0.2); }
-textarea.input { resize: vertical; min-height: 80px; }
+.mini-card { text-align: center; }
+.stat { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
+.kpi { font-size: var(--text-2xl); font-weight: 700; }
+.patient-cell { display: flex; align-items: center; gap: var(--space-3); }
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--primary); display: flex; align-items: center; justify-content: center;
+  font-size: var(--text-sm); font-weight: 600; color: #0b1020;
+}
+.actions { display: flex; gap: var(--space-2); }
+.empty-content { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); color: var(--muted); }
 </style>

@@ -1,44 +1,37 @@
-const pool = require('../db/connection');
+const mongoose = require('mongoose');
 
-const PacienteModel = {
-  async getAll() {
-    const result = await pool.query('SELECT * FROM pacientes WHERE estado = true ORDER BY id');
-    return result.rows;
-  },
+const pacienteSchema = new mongoose.Schema({
+  nombre: { type: String, required: true, maxlength: 100 },
+  apellido: { type: String, required: true, maxlength: 100 },
+  telefono: { type: String, maxlength: 20 },
+  email: { type: String, maxlength: 100 },
+  direccion: { type: String },
+  fecha_nacimiento: { type: Date },
+  fecha_registro: { type: Date, default: Date.now },
+  estado: { type: Boolean, default: true }
+});
 
-  async getById(id) {
-    const result = await pool.query('SELECT * FROM pacientes WHERE id = $1', [id]);
-    return result.rows[0];
-  },
+const PacienteModel = mongoose.model('Paciente', pacienteSchema);
 
-  async create(data) {
-    const { nombre, apellido, telefono, email, direccion, fecha_nacimiento } = data;
-    const result = await pool.query(
-      `INSERT INTO pacientes (nombre, apellido, telefono, email, direccion, fecha_nacimiento)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [nombre, apellido, telefono, email, direccion, fecha_nacimiento]
-    );
-    return result.rows[0];
-  },
+PacienteModel.getAll = async () => {
+  return await PacienteModel.find({ estado: true }).sort({ _id: 1 });
+};
 
-  async update(id, data) {
-    const { nombre, apellido, telefono, email, direccion, fecha_nacimiento } = data;
-    const result = await pool.query(
-      `UPDATE pacientes SET nombre = $1, apellido = $2, telefono = $3,
-       email = $4, direccion = $5, fecha_nacimiento = $6, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $7 RETURNING *`,
-      [nombre, apellido, telefono, email, direccion, fecha_nacimiento, id]
-    );
-    return result.rows[0];
-  },
+PacienteModel.getById = async (id) => {
+  return await PacienteModel.findById(id);
+};
 
-  async delete(id) {
-    const result = await pool.query(
-      'UPDATE pacientes SET estado = false WHERE id = $1 RETURNING *',
-      [id]
-    );
-    return result.rows[0];
-  }
+PacienteModel.create = async (data) => {
+  const paciente = new PacienteModel(data);
+  return await paciente.save();
+};
+
+PacienteModel.update = async (id, data) => {
+  return await PacienteModel.findByIdAndUpdate(id, data, { new: true });
+};
+
+PacienteModel.delete = async (id) => {
+  return await PacienteModel.findByIdAndUpdate(id, { estado: false }, { new: true });
 };
 
 module.exports = PacienteModel;

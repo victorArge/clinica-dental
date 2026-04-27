@@ -1,16 +1,27 @@
-const { Pool } = require('pg');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'clinica_dental',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
-});
+const MONGO_HOSTS = process.env.MONGO_HOSTS || 'localhost:27017';
+const MONGO_DB = process.env.MONGO_DB || 'clinica_dental';
+const MONGO_REPLICA_SET = process.env.MONGO_REPLICA_SET || '';
 
-pool.on('error', (err) => {
-  console.error('Error inesperado en el cliente PostgreSQL', err);
-});
+const hosts = MONGO_HOSTS.split(',').map(h => h.trim()).join(',');
+let mongoUri;
 
-module.exports = pool;
+if (MONGO_REPLICA_SET) {
+  mongoUri = `mongodb://${hosts}/${MONGO_DB}?replicaSet=${MONGO_REPLICA_SET}`;
+} else {
+  mongoUri = `mongodb://${hosts}/${MONGO_DB}`;
+}
+
+const options = {
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+};
+
+mongoose.connect(mongoUri, options)
+  .then(() => console.log('Conectado a MongoDB Replica Set'))
+  .catch(err => console.error('Error de conexión a MongoDB:', err));
+
+module.exports = mongoose;

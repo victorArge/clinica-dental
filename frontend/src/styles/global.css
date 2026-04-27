@@ -10,8 +10,35 @@
   --accent: #b8860b;
   --green: #10b981;
   --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
   --radius: 14px;
   --shadow: 0 8px 32px rgba(0,0,0,.3);
+
+  /* Spacing System (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* Typography Scale */
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+
+  /* Animation System */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
 }
 
 * { box-sizing: border-box; }

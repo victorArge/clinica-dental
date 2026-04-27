@@ -1,24 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import LoginView from '../views/LoginView.vue';
-import DashboardView from '../views/DashboardView.vue';
-import PacientesView from '../views/PacientesView.vue';
-import MedicosView from '../views/MedicosView.vue';
-import CitasView from '../views/CitasView.vue';
+import { useAuthStore } from '../stores/useAuthStore';
 
 const routes = [
-  { path: '/login', component: LoginView },
-  { path: '/', component: DashboardView, meta: { requiresAuth: true } },
-  { path: '/pacientes', component: PacientesView, meta: { requiresAuth: true } },
-  { path: '/medicos', component: MedicosView, meta: { requiresAuth: true } },
-  { path: '/citas', component: CitasView, meta: { requiresAuth: true } },
-  { path: '/:pathMatch(.)', redirect: '/' },
+  { path: '/login', component: () => import('../views/LoginView.vue') },
+  { path: '/', component: () => import('../views/DashboardView.vue'), meta: { requiresAuth: true } },
+  { path: '/pacientes', component: () => import('../views/PacientesView.vue'), meta: { requiresAuth: true } },
+  { path: '/medicos', component: () => import('../views/MedicosView.vue'), meta: { requiresAuth: true } },
+  { path: '/citas', component: () => import('../views/CitasView.vue'), meta: { requiresAuth: true } },
+  { path: '/:pathMatch(.*)', redirect: '/' }
 ];
 
 const router = createRouter({ history: createWebHistory(), routes });
 
 router.beforeEach((to, from, next) => {
-  const isAuth = !!localStorage.getItem('token');
-  if (to.meta.requiresAuth && !isAuth) next('/login');
+  const auth = useAuthStore();
+  if (to.meta.requiresAuth && !auth.isAuthenticated) next('/login');
   else next();
 });
 

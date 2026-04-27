@@ -1,5 +1,6 @@
 <template>
-  <div v-if="isAuthenticated" class="app-layout">
+  <ToastNotification />
+  <div v-if="auth.isAuthenticated" class="app-layout">
     <header class="topbar">
       <div class="brand">
         <div class="logo">CD</div>
@@ -8,7 +9,7 @@
           <small>Sistema de Gestión</small>
         </div>
       </div>
-      <button class="btn secondary" @click="handleLogout">Cerrar Sesión</button>
+      <BaseButton variant="secondary" size="sm" @click="handleLogout">Cerrar Sesión</BaseButton>
     </header>
 
     <aside class="sidebar">
@@ -39,24 +40,18 @@
   <router-view v-else />
 </template>
 
-<script>
-import { ref, computed } from 'vue';
+<script setup>
 import { useRouter } from 'vue-router';
-import { logout } from './services/api';
+import { useAuthStore } from './stores/useAuthStore';
+import ToastNotification from './components/ToastNotification.vue';
+import BaseButton from './components/BaseButton.vue';
 
-export default {
-  name: 'App',
-  setup() {
-    const router = useRouter();
-    const isAuthenticated = computed(() => !!localStorage.getItem('token'));
+const auth = useAuthStore();
+const router = useRouter();
 
-    const handleLogout = () => {
-      logout();
-      router.push('/login');
-    };
-
-    return { isAuthenticated, handleLogout };
-  }
+const handleLogout = () => {
+  auth.logout();
+  router.push('/login');
 };
 </script>
 

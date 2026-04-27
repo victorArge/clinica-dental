@@ -1,43 +1,38 @@
-const pool = require('../db/connection');
+const mongoose = require('mongoose');
 
-const MedicoModel = {
-  async getAll() {
-    const result = await pool.query('SELECT * FROM medicos WHERE estado = true ORDER BY id');
-    return result.rows;
-  },
+const medicoSchema = new mongoose.Schema({
+  nombre: { type: String, required: true, maxlength: 100 },
+  apellido: { type: String, required: true, maxlength: 100 },
+  especialidad: { type: String, required: true, maxlength: 100 },
+  telefono: { type: String, maxlength: 20 },
+  email: { type: String, maxlength: 100 },
+  matricula: { type: String, required: true, maxlength: 50 },
+  estado: { type: Boolean, default: true }
+});
 
-  async getById(id) {
-    const result = await pool.query('SELECT * FROM medicos WHERE id = $1', [id]);
-    return result.rows[0];
-  },
+medicoSchema.index({ matricula: 1 }, { unique: true });
 
-  async create(data) {
-    const { nombre, apellido, especialidad, telefono, email, matricula } = data;
-    const result = await pool.query(
-      `INSERT INTO medicos (nombre, apellido, especialidad, telefono, email, matricula)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [nombre, apellido, especialidad, telefono, email, matricula]
-    );
-    return result.rows[0];
-  },
+const MedicoModel = mongoose.model('Medico', medicoSchema);
 
-  async update(id, data) {
-    const { nombre, apellido, especialidad, telefono, email, matricula } = data;
-    const result = await pool.query(
-      `UPDATE medicos SET nombre = $1, apellido = $2, especialidad = $3,
-       telefono = $4, email = $5, matricula = $6 WHERE id = $7 RETURNING *`,
-      [nombre, apellido, especialidad, telefono, email, matricula, id]
-    );
-    return result.rows[0];
-  },
+MedicoModel.getAll = async () => {
+  return await MedicoModel.find({ estado: true }).sort({ _id: 1 });
+};
 
-  async delete(id) {
-    const result = await pool.query(
-      'UPDATE medicos SET estado = false WHERE id = $1 RETURNING *',
-      [id]
-    );
-    return result.rows[0];
-  }
+MedicoModel.getById = async (id) => {
+  return await MedicoModel.findById(id);
+};
+
+MedicoModel.create = async (data) => {
+  const medico = new MedicoModel(data);
+  return await medico.save();
+};
+
+MedicoModel.update = async (id, data) => {
+  return await MedicoModel.findByIdAndUpdate(id, data, { new: true });
+};
+
+MedicoModel.delete = async (id) => {
+  return await MedicoModel.findByIdAndUpdate(id, { estado: false }, { new: true });
 };
 
 module.exports = MedicoModel;

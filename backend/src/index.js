@@ -4,12 +4,17 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+require('./db/connection');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const NODE_NAME = process.env.NODE_NAME || 'unknown';
 const LATENCY_MS = parseInt(process.env.LATENCY_MS || '0');
 
+const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
 app.use(cors());
+app.use(express.json());
 
 app.use((req, res, next) => {
   if (LATENCY_MS > 0) {
@@ -18,8 +23,6 @@ app.use((req, res, next) => {
     next();
   }
 });
-
-app.use(express.json());
 
 app.use((req, res, next) => {
   res.setHeader('X-Node-Name', NODE_NAME);
@@ -68,8 +71,8 @@ app.use('/api/medicos', medicoRoutes);
 app.use('/api/citas', citaRoutes);
 
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Algo salió mal!' });
+  console.error('Error detallado:', err);
+  res.status(500).json({ error: err.message || 'Algo salió mal!' });
 });
 
 app.listen(PORT, () => {

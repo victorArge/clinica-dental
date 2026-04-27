@@ -1,75 +1,85 @@
 <template>
   <div class="login-page">
-    <div class="login-card">
+    <BaseCard class="login-card" glass>
       <div class="login-header">
         <div class="logo">CD</div>
         <h1>Clínica Dental</h1>
         <p>Ingresa tus credenciales</p>
       </div>
-      
-      <form @submit.prevent="handleLogin">
-        <div class="form-group">
-          <label>Email</label>
-          <input 
-            v-model="email" 
-            type="email" 
-            class="input" 
-            placeholder="doctor@clinica.com"
-            required
-          >
-        </div>
-        
-        <div class="form-group">
-          <label>Contraseña</label>
-          <input 
-            v-model="password" 
-            type="password" 
-            class="input" 
-            placeholder="••••••••"
-            required
-          >
-        </div>
-        
-        <button type="submit" class="btn" :disabled="loading">
-          {{ loading ? 'Ingresando...' : 'Iniciar Sesión' }}
-        </button>
-        
-        <p v-if="error" class="error">{{ error }}</p>
+
+      <form @submit.prevent="handleSubmit">
+        <BaseInput
+          v-model="form.values.email"
+          label="Email"
+          placeholder="doctor@clinica.com"
+          :error="form.errors.email"
+          @blur="form.setFieldTouched('email')"
+        >
+          <template #prefix>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </template>
+        </BaseInput>
+
+        <BaseInput
+          v-model="form.values.password"
+          label="Contraseña"
+          type="password"
+          placeholder="••••••••"
+          :error="form.errors.password"
+          toggle-password
+          @blur="form.setFieldTouched('password')"
+        >
+          <template #prefix>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </template>
+        </BaseInput>
+
+        <BaseButton
+          type="submit"
+          variant="primary"
+          size="lg"
+          :loading="form.isSubmitting.value"
+          style="width: 100%; margin-top: 8px;"
+        >
+          Iniciar Sesión
+        </BaseButton>
+
+        <p v-if="loginError" class="error">{{ loginError }}</p>
       </form>
-      
+
       <p class="hint">Usa cualquier email y contraseña para probar</p>
-    </div>
+    </BaseCard>
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/useAuthStore';
+import { useForm, required, email } from '../composables/useForm';
+import BaseCard from '../components/BaseCard.vue';
+import BaseInput from '../components/BaseInput.vue';
+import BaseButton from '../components/BaseButton.vue';
 
-export default {
-  name: 'LoginView',
-  setup() {
-    const email = ref('');
-    const password = ref('');
-    const loading = ref(false);
-    const error = ref('');
-    const router = useRouter();
+const router = useRouter();
+const auth = useAuthStore();
+const loginError = ref('');
 
-    const handleLogin = async () => {
-      loading.value = true;
-      error.value = '';
-      
-      setTimeout(() => {
-        localStorage.setItem('token', 'demo-token-123');
-        localStorage.setItem('user', JSON.stringify({ email: email.value, nombre: 'Dr. Demo' }));
-        loading.value = false;
-        router.push('/');
-      }, 800);
-    };
-
-    return { email, password, loading, error, handleLogin };
+const form = useForm(
+  { email: '', password: '' },
+  {
+    email: [required('El email es requerido'), email('Email inválido')],
+    password: [required('La contraseña es requerida')]
   }
-};
+);
+
+const handleSubmit = form.handleSubmit(async (values) => {
+  loginError.value = '';
+  await new Promise(resolve => setTimeout(resolve, 800));
+  const fakeToken = 'demo-token-' + Date.now();
+  auth.login(fakeToken, { email: values.email, name: 'Dr. Demo' });
+  router.push('/');
+});
 </script>
 
 <style scoped>
@@ -80,23 +90,15 @@ export default {
   justify-content: center;
   padding: 20px;
 }
-
 .login-card {
-  background: var(--surface);
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: var(--radius);
-  padding: 40px;
   width: 100%;
   max-width: 400px;
-  box-shadow: var(--shadow);
 }
-
 .login-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: var(--space-6);
 }
-
-.login-header .logo {
+.logo {
   width: 60px;
   height: 60px;
   border-radius: 16px;
@@ -107,42 +109,26 @@ export default {
   color: white;
   font-size: 24px;
   font-weight: 700;
-  margin: 0 auto 16px;
+  margin: 0 auto var(--space-4);
 }
-
 .login-header h1 {
-  margin: 0 0 8px;
-  font-size: 24px;
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xl);
 }
-
 .login-header p {
   color: var(--muted);
   margin: 0;
 }
-
-.login-card .btn {
-  width: 100%;
-  margin-top: 8px;
-  padding: 14px;
-  font-size: 16px;
-}
-
-.login-card .btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .error {
   color: var(--danger);
   text-align: center;
-  margin-top: 16px;
-  font-size: 14px;
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
 }
-
 .hint {
   text-align: center;
   color: var(--muted);
-  font-size: 12px;
-  margin-top: 24px;
+  font-size: var(--text-xs);
+  margin-top: var(--space-6);
 }
 </style>

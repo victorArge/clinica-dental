@@ -1,66 +1,61 @@
-const pool = require('../db/connection');
+const mongoose = require('mongoose');
 
-const CitaModel = {
-  async getAll() {
-    const result = await pool.query(`
-      SELECT c.*, p.nombre as paciente_nombre, p.apellido as paciente_apellido,
-             m.nombre as medico_nombre, m.apellido as medico_apellido, m.especialidad
-      FROM citas c
-      JOIN pacientes p ON c.paciente_id = p.id
-      JOIN medicos m ON c.medico_id = m.id
-      ORDER BY c.fecha_hora DESC
-    `);
-    return result.rows;
-  },
+const citaSchema = new mongoose.Schema({
+  paciente_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Paciente' },
+  medico_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Medico' },
+  fecha_hora: { type: Date, required: true },
+  duracion_minutos: { type: Number, default: 30 },
+  motivo: { type: String },
+  estado: { type: String, default: 'programada' }
+}, { timestamps: true });
 
-  async getById(id) {
-    const result = await pool.query(`
-      SELECT c.*, p.nombre as paciente_nombre, p.apellido as paciente_apellido,
-             m.nombre as medico_nombre, m.apellido as medico_apellido, m.especialidad
-      FROM citas c
-      JOIN pacientes p ON c.paciente_id = p.id
-      JOIN medicos m ON c.medico_id = m.id
-      WHERE c.id = $1
-    `, [id]);
-    return result.rows[0];
-  },
+const CitaModel = mongoose.model('Cita', citaSchema);
 
-  async getByMedico(medicoId) {
-    const result = await pool.query(`
-      SELECT c.*, p.nombre as paciente_nombre, p.apellido as paciente_apellido
-      FROM citas c
-      JOIN pacientes p ON c.paciente_id = p.id
-      WHERE c.medico_id = $1
-      ORDER BY c.fecha_hora
-    `, [medicoId]);
-    return result.rows;
-  },
+CitaModel.getAll = async () => {
+  const citas = await CitaModel.find()
+    .populate('paciente_id', 'nombre apellido')
+    .populate('medico_id', 'nombre apellido especialidad')
+    .sort({ fecha_hora: -1 });
+  return citas.map(c => ({
+    id: c._id,
+    paciente_id: c.paciente_id?._id,
+    paciente_nombre: c.paciente_id?.nombre || '',
+    paciente_apellido: c.paciente_id?.apellido || '',
+    medico_id: c.medico_id?._id,
+    medico_nombre: c.medico_id?.nombre || '',
+    medico_apellido: c.medico_id?.apellido || '',
+    fecha_hora: c.fecha_hora,
+    duracion_minutos: c.duracion_minutos,
+    motivo: c.motivo,
+    estado: c.estado,
+    createdAt: c.createdAt,
+    updatedAt: c.updatedAt
+  }));
+};
 
-  async create(data) {
-    const { paciente_id, medico_id, fecha_hora, duracion_minutos, motivo } = data;
-    const result = await pool.query(
-      `INSERT INTO citas (paciente_id, medico_id, fecha_hora, duracion_minutos, motivo)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [paciente_id, medico_id, fecha_hora, duracion_minutos || 30, motivo]
-    );
-    return result.rows[0];
-  },
+CitaModel.getById = async (id) => {
+  return await CitaModel.findById(id)
+    .populate('paciente_id', 'nombre apellido')
+    .populate('medico_id', 'nombre apellido especialidad');
+};
 
-  async update(id, data) {
-    const { paciente_id, medico_id, fecha_hora, duracion_minutos, motivo, estado } = data;
-    const result = await pool.query(
-      `UPDATE citas SET paciente_id = $1, medico_id = $2, fecha_hora = $3,
-       duracion_minutos = $4, motivo = $5, estado = $6, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $7 RETURNING *`,
-      [paciente_id, medico_id, fecha_hora, duracion_minutos, motivo, estado, id]
-    );
-    return result.rows[0];
-  },
+CitaModel.getByMedico = async (medicoId) => {
+  return await CitaModel.find({ medico_id: medicoId })
+    .populate('paciente_id', 'nombre apellido')
+    .sort({ fecha_hora: 1 });
+};
 
-  async delete(id) {
-    const result = await pool.query('DELETE FROM citas WHERE id = $1 RETURNING *', [id]);
-    return result.rows[0];
-  }
+CitaModel.create = async (data) => {
+  const cita = new CitaModel(data);
+  return await cita.save();
+};
+
+CitaModel.update = async (id, data) => {
+  return await CitaModel.findByIdAndUpdate(id, data, { new: true });
+};
+
+CitaModel.delete = async (id) => {
+  return await CitaModel.findByIdAndDelete(id);
 };
 
 module.exports = CitaModel;

@@ -1,0 +1,248 @@
+================================================================================
+                    CLINICA DENTAL - ESTADO DEL PROYECTO
+================================================================================
+
+VERSION: 1.1.0
+FECHA: 2026-04-27
+ESTADO: En Desarrollo
+
+================================================================================
+                                ARQUITECTURA
+================================================================================
+
+TECNOLOGIAS:
+- Backend: Node.js + Express + Mongoose
+- Frontend: Vue.js 3 + Vite + Vue Router + Axios
+- Base de Datos: MongoDB 7 con Replica Set (3 nodos)
+- Contenedores: Docker + Docker Compose
+- Balanceador: Nginx
+
+INFRAESTRUCTURA ACTUAL:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              NGINX (Puerto 8080)                            │
+│                          Balanceador de carga                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+                    ┌───────────┬───────────┬───────────┐
+                    │  Node 1   │  Node 2   │  Node 3   │
+                    │  :3001    │  :3002    │  :3003    │
+                    └───────────┴───────────┴───────────┘
+                              │
+                    ┌─────────┴─────────┐
+                    │  MongoDB Replica  │
+                    │     clinica_rs    │
+                    ├───────────────────┤
+                    │ mongo1:27017 (PR) │
+                    │ mongo2:27018 (SEC)│
+                    │ mongo3:27019 (SEC)│
+                    └───────────────────┘
+
+================================================================================
+                            FUNCIONALIDADES IMPLEMENTADAS
+================================================================================
+
+BACKEND:
+[X] API REST con Express
+[X] Rutas para medicos, pacientes, citas
+[X] Conexion a MongoDB con Replica Set
+[X] Middleware de logging con X-Node-Name
+[X] Controlador de latencia simulada
+
+FRONTEND:
+[X] Vistas: Dashboard, Medicos, Pacientes, Citas, Login
+[X] Router con navegacion + lazy loading
+[X] Servicios API integrados
+[X] Estilos CSS globales con design tokens
+[X] Sistema de componentes reutilizables premium
+    - BaseButton, BaseInput, BaseModal, BaseCard
+    - BaseBadge, BaseTable, BaseSelect
+    - ToastNotification
+[X] Pinia stores (useAuthStore, useToastStore)
+[X] Composables (useForm, useFetch, useDebounce)
+[X] Validacion de formularios con errores inline
+[X] Refactorizacion de vistas con componentes nuevos
+
+BASE DE DATOS DISTRIBUIDA:
+[X] MongoDB Replica Set con 3 nodos
+[X] Failover automatico funcionando
+[X] Replicacion de datos en tiempo real
+[X] Health checks para todos los contenedores
+
+CONTENEDORES:
+[X] Dockerfile para backend (Node.js 18 Alpine)
+[X] Dockerfile para frontend (Node.js 18 Alpine)
+[X] Dockerfile para nginx
+[X] docker-compose.yml con perfiles
+[X] Volumenes persistentes para datos MongoDB
+
+================================================================================
+                            MEJORAS REALIZADAS
+================================================================================
+
+2026-04-27: Implementacion de MongoDB Replica Set
+- Creados 3 nodos MongoDB (mongo1, mongo2, mongo3)
+- Configurado replica set 'clinica_rs'
+- Probado failover automatico: cuando mongo1 se cae, mongo2 se convierte
+  en PRIMARY automaticamente
+- Recuperacion automatica cuando mongo1 vuelve
+
+2026-04-27: Agregado Frontend al despliegue
+- Creado Dockerfile para frontend (Vue.js)
+- Integrado con nginx para servir aplicación web
+- Modificado api.js para usar rutas relativas (/api)
+- Actualizado nginx.conf para proxy hacia frontend:5173
+
+2026-04-27: Reestructuracion de docker-compose
+- Perfil 'distributed' para modo completo (MongoDB + 3 nodos + nginx + frontend)
+- Perfil 'postgres' para PostgreSQL
+- Health checks en todos los servicios
+- Dependencias correctas entre servicios
+
+2026-04-27: Sistema de componentes premium
+- Libreria de componentes reutilizables: BaseButton, BaseInput, BaseModal,
+  BaseCard, BaseBadge, BaseTable, BaseSelect, ToastNotification
+- Pinia para estado global (useAuthStore, useToastStore)
+- Composables: useForm (validacion), useFetch, useDebounce
+- Sistema de diseno con CSS tokens (spacing, typography, animation)
+- Lazy loading de rutas con defineAsyncComponent
+- Refactorizacion completa de todas las vistas
+
+================================================================================
+                                PENDIENTES
+================================================================================
+
+AUTENTICACION:
+[ ] Sistema de login con JWT
+[ ] Middleware de autenticacion en rutas protegidas
+[ ] Roles de usuario (admin, medico, secretaria)
+[ ] Almacenamiento de tokens en localStorage
+
+MONITOREO:
+[ ] Endpoint /health para cada nodo
+[ ] Dashboard de monitoreo con metricas
+[ ] Logs centralizados
+[ ] Alertas de monitoreo
+
+BACKUP:
+[ ] Script de backup automatico
+[ ] Restauracion de datos
+[ ] Snapshots de volumenes
+
+RENDIMIENTO:
+[X] Lazy loading de rutas
+[ ] Redis para cache de sesiones
+[ ] Conexiones pool para MongoDB
+[ ] Compresion de respuestas API
+
+SECURITY:
+[ ] Autenticacion MongoDB (actualmente sin auth)
+[ ] HTTPS en nginx
+[ ] Variables de entorno para secretos
+[ ] Rate limiting
+
+================================================================================
+                            CARACTERISTICAS FUTURAS
+================================================================================
+
+CORE:
+[ ] Gestion de usuarios y permisos
+[ ] Historial de citas por paciente
+[ ] Notificaciones por email/SMS
+[ ] Reportes y estadisticas
+
+BASE DE DATOS:
+[ ] Sharding para datos muy grandes
+[ ] PostgreSQL para datos estructurados (citas, facturacion)
+[ ] Schema validation en MongoDB
+
+INFRAESTRUCTURA:
+[ ] Kubernetes deployment
+[ ] CI/CD con GitHub Actions
+[ ] Monitoreo con Prometheus/Grafana
+[ ] Logging con ELK stack
+
+FRONTEND:
+[ ] TypeScript
+[ ] Testing con Vitest
+[ ] PWA para offline
+[ ] Aplicacion movil (React Native)
+
+================================================================================
+                            COMANDOS DE DESPLIEGUE
+================================================================================
+
+# Modo distribuido (MongoDB 3 nodos + Backend 3 nodos + Frontend + Nginx)
+docker-compose --profile distributed up -d
+
+# Ver estado de servicios
+docker ps --filter "name=clinica"
+
+# Ver logs de un servicio
+docker logs -f clinica_node1
+docker logs -f clinica_mongo1
+
+# Verificar replica set
+docker exec clinica_mongo1 mongosh --quiet --eval "rs.status().members"
+
+# Detener todos los servicios
+docker-compose --profile distributed down
+
+# Reconstruir y desplegar
+docker-compose --profile distributed up -d --build --force-recreate
+
+================================================================================
+                            ESTRUCTURA DE ARCHIVOS
+================================================================================
+
+ClinicaDental/
+├── backend/
+│   ├── src/
+│   │   ├── controllers/    (citaController.js, medicoController.js, pacienteController.js)
+│   │   ├── db/             (connection.js)
+│   │   ├── models/         (citaModel.js, medicoModel.js, pacienteModel.js)
+│   │   ├── routes/         (citaRoutes.js, medicoRoutes.js, pacienteRoutes.js)
+│   │   └── index.js
+│   ├── Dockerfile
+│   └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── views/          (CitasView.vue, MedicosView.vue, PacientesView.vue, etc.)
+│   │   ├── services/       (api.js)
+│   │   ├── router/
+│   │   ├── assets/
+│   │   ├── styles/
+│   │   └── App.vue
+│   ├── Dockerfile
+│   └── package.json
+├── nginx/
+│   ├── Dockerfile
+│   └── nginx.conf
+├── scripts/
+│   ├── test-deploy.ps1
+│   ├── README-distribucion.md
+│   └── insert_data.js
+├── docker-compose.yml
+└── README.md
+
+================================================================================
+                            CONFIGURACION ACTUAL
+================================================================================
+
+PUERTOS:
+- Nginx: 8080 (API + Frontend)
+- Node1: 3001
+- Node2: 3002
+- Node3: 3003
+- Mongo1: 27017
+- Mongo2: 27018
+- Mongo3: 27019
+- Frontend: 5173
+
+VARIABLES DE ENTORNO (Backend):
+- PORT: 3000
+- NODE_NAME: node1/node2/node3
+- LATENCY_MS: 0
+- MONGO_HOSTS: mongo1:27017,mongo2:27017,mongo3:27017
+- MONGO_DB: clinica_dental
+- MONGO_REPLICA_SET: clinica_rs
+
+================================================================================

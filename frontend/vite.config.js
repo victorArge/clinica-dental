@@ -5,15 +5,16 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     port: 5173,
+    host: true,
     allowedHosts: ['frontend', 'nginx', 'localhost', '127.0.0.1'],
+    hmr: {
+      host: 'localhost',
+      port: 5173
+    },
     proxy: {
       '/api': {
         target: 'http://node1:3000',
         changeOrigin: true
-      },
-      '/ws': {
-        target: 'ws://localhost:5173',
-        ws: true
       }
     }
   }

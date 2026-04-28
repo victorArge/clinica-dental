@@ -261,4 +261,75 @@ ClinicaDental - Componentes Optimizados
 
 ---
 
-ULTIMA ACTUALIZACION: 2026-04-27
+ULTIMA ACTUALIZACION: 2026-04-28
+
+---
+
+## 9. CAMBIOS RECIENTES (2026-04-28)
+
+   Alta
+   [x] LoginView - Separar login y registro en formularios/modales independientes
+       - Login solo con email y password
+       - Registro en modal separado (crear cuenta)
+       - Fix de validación que afectaba ambos formularios
+
+   Alta
+   [x] PacienteDashboard - Rediseño completo
+       - Removidas tablas de próximas/atendidas/canceladas (no son relevantes para paciente)
+       - Solo muestra: datos del paciente, próxima cita, botón agendar
+       - Layout de dos columnas: datos personales + cita
+
+---
+
+## 10. ESTADO ACTUAL DE DOCKER
+
+   Alta
+   [x] Sistema corriendo con docker-compose
+   [x] Frontend en puerto 5173/8080
+   [x] Backend distribuido (3 nodos node1, node2, node3)
+   [x] MongoDB en puerto 27017
+   [x] Nginx como balanceador
+
+   Media
+   [x] Problema de puertos resuelto (5173 en uso - reiniciar contenedores)
+   [x] Scripts de seed funcionando via docker exec
+
+---
+
+## 11. USUARIOS seedeados
+
+   - secretaria@clinica.com / secretaria123 (rol: secretaria)
+   - medico@clinica.com / medico123 (rol: medico)
+   - paciente@clinica.com / paciente123 (rol: paciente)
+
+---
+
+## 12. PENDIENTES / ISSUES CONOCIDOS
+
+   Baja
+   [ ] Posible conflicto de base de datos clinica_dental vs clinicadental
+   [ ] Login 401 - verificar que usuario existe y contraseña correcta
+   [ ] WebSocket HMR error (no afecta funcionalidad)
+   [ ] Favicon 404 (no critical)
+
+---
+
+## 13. PROXIMOS PASOS RECOMENDADOS
+
+   Alta
+   [ ] Verificar login funciona con credenciales correctas
+   [ ] Test completa del flujo paciente (login -> agendar cita)
+   [ ] Test flujo secretaria (login -> CRUD pacientes)
+
+   Media
+   [ ] Hacer seed completo de médicos y pacientes
+   [ ] SkeletonLoader.vue
+   [ ] ConfirmDialog.vue
+   [ ] ESLint + Prettier
+
+   Baja
+   [ ] Dark/Light theme
+   [ ] useMediaQuery composable
+   [ ] Documentación Storybook
+
+---

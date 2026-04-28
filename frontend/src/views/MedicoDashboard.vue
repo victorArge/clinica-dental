@@ -29,50 +29,6 @@
       </BaseCard>
     </div>
 
-    <BaseCard style="margin-top: var(--space-4);">
-      <h3 style="margin: 0 0 var(--space-4);">Mis Próximas Citas</h3>
-      <BaseTable :columns="columns" :data="misProximasCitas" :loading="loading">
-        <template #cell-paciente_nombre="{ row }">
-          <div class="patient-cell">
-            <div class="avatar">{{ getInitials(row.paciente_nombre) }}</div>
-            {{ row.paciente_nombre }} {{ row.paciente_apellido }}
-          </div>
-        </template>
-        <template #cell-fecha_hora="{ value }">{{ formatDate(value) }}</template>
-        <template #cell-estado="{ value }">
-          <BaseBadge :variant="getEstadoVariant(value)">{{ value }}</BaseBadge>
-        </template>
-        <template #cell-acciones="{ row }">
-          <div class="actions">
-            <button v-if="row.estado === 'programada'" class="action-btn success" @click="updateEstado(row.id, 'completada')" title="Marcar completada">✓</button>
-            <button v-if="row.estado === 'programada'" class="action-btn danger" @click="updateEstado(row.id, 'cancelada')" title="Cancelar">✕</button>
-          </div>
-        </template>
-        <template #empty>
-          <div class="empty-state">No tienes citas programadas</div>
-        </template>
-      </BaseTable>
-    </BaseCard>
-
-    <BaseCard style="margin-top: var(--space-4);">
-      <h3 style="margin: 0 0 var(--space-4);">Historial de Citas</h3>
-      <BaseTable :columns="columnsHistorial" :data="misCitasPasadas" :loading="loading">
-        <template #cell-paciente_nombre="{ row }">
-          <div class="patient-cell">
-            <div class="avatar">{{ getInitials(row.paciente_nombre) }}</div>
-            {{ row.paciente_nombre }} {{ row.paciente_apellido }}
-          </div>
-        </template>
-        <template #cell-fecha_hora="{ value }">{{ formatDate(value) }}</template>
-        <template #cell-estado="{ value }">
-          <BaseBadge :variant="getEstadoVariant(value)">{{ value }}</BaseBadge>
-        </template>
-        <template #empty>
-          <div class="empty-state">No hay historial de citas</div>
-        </template>
-      </BaseTable>
-    </BaseCard>
-
     <div class="tables-row">
       <BaseCard>
         <h3 style="margin: 0 0 var(--space-4);">Próximas Citas</h3>
@@ -89,8 +45,8 @@
           </template>
           <template #cell-acciones="{ row }">
             <div class="actions">
-              <button v-if="row.estado === 'programada'" class="action-btn success" @click="updateEstado(row.id, 'completada')" title="Marcar completada">✓</button>
-              <button v-if="row.estado === 'programada'" class="action-btn danger" @click="updateEstado(row.id, 'cancelada')" title="Cancelar">✕</button>
+              <button v-if="row.estado === 'programada'" class="action-btn success" @click="updateEstado(row._id, 'completada')" title="Marcar completada">✓</button>
+              <button v-if="row.estado === 'programada'" class="action-btn danger" @click="updateEstado(row._id, 'cancelada')" title="Cancelar">✕</button>
             </div>
           </template>
           <template #empty>

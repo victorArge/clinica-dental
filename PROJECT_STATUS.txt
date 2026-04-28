@@ -2,8 +2,8 @@
                     CLINICA DENTAL - ESTADO DEL PROYECTO
 ================================================================================
 
-VERSION: 1.1.0
-FECHA: 2026-04-27
+VERSION: 1.2.0
+FECHA: 2026-04-28
 ESTADO: En Desarrollo
 
 ================================================================================
@@ -22,19 +22,20 @@ INFRAESTRUCTURA ACTUAL:
 │                              NGINX (Puerto 8080)                            │
 │                          Balanceador de carga                               │
 └─────────────────────────────────────────────────────────────────────────────┘
-                    ┌───────────┬───────────┬───────────┐
-                    │  Node 1   │  Node 2   │  Node 3   │
-                    │  :3001    │  :3002    │  :3003    │
-                    └───────────┴───────────┴───────────┘
-                              │
-                    ┌─────────┴─────────┐
-                    │  MongoDB Replica  │
-                    │     clinica_rs    │
-                    ├───────────────────┤
-                    │ mongo1:27017 (PR) │
-                    │ mongo2:27018 (SEC)│
-                    │ mongo3:27019 (SEC)│
-                    └───────────────────┘
+                     ┌───────────┬───────────┬───────────┐
+                     │  Node 1   │  Node 2   │  Node 3   │
+                     │  :3001    │  :3002    │  :3003    │
+                     └───────────┴───────────┴───────────┘
+                               │
+                     ┌─────────┴─────────┐
+                     │    MongoDB 7      │
+                     │ clinica_mongo1    │
+                     │    :27017         │
+                     └───────────────────┘
+
+NOTA: MongoDB actualmente es un solo nodo (no replica set activo).
+      La base de datos clinica_dental contiene las colecciones:
+      usuarios, medicos, pacientes, citas
 
 ================================================================================
                             FUNCIONALIDADES IMPLEMENTADAS
@@ -46,6 +47,11 @@ BACKEND:
 [X] Conexion a MongoDB con Replica Set
 [X] Middleware de logging con X-Node-Name
 [X] Controlador de latencia simulada
+[X] Sistema de autenticacion JWT (login, register, verify)
+[X] Middleware de autenticacion en rutas protegidas
+[X] Roles de usuario (secretaria, medico, paciente)
+[X] Reset password con codigos de recuperacion
+[X] Modelo de usuarios con entityId para relacionar con medicos/pacientes
 
 FRONTEND:
 [X] Vistas: Dashboard, Medicos, Pacientes, Citas, Login
@@ -75,8 +81,24 @@ CONTENEDORES:
 [X] Volumenes persistentes para datos MongoDB
 
 ================================================================================
-                            MEJORAS REALIZADAS
-================================================================================
+MEJORAS REALIZADAS
+
+2026-04-28: Frontend Login Reformado
+- Separacion de login y registro en formularios independientes
+- Registro en modal separado (no mas tabs conflictivos)
+- Fix de validacion que afectaba ambos formularios
+
+2026-04-28: PacienteDashboard Rediseñado
+- Removidas tablas de citas (proximas/atendidas/canceladas)
+- Solo muestra: datos personales, proxima cita, agendar cita
+- Layout de dos columnas
+
+2026-04-28: Sistema de Autenticacion Completado
+- Login/logout con JWT
+- Register de pacientes
+- Recuperacion de contraseña via email
+- Middleware de autenticacion en rutas protegidas
+- Roles: secretaria, medico, paciente
 
 2026-04-27: Implementacion de MongoDB Replica Set
 - Creados 3 nodos MongoDB (mongo1, mongo2, mongo3)
@@ -107,17 +129,17 @@ CONTENEDORES:
 - Refactorizacion completa de todas las vistas
 
 ================================================================================
-                                PENDIENTES
-================================================================================
+PENDIENTES
 
 AUTENTICACION:
-[ ] Sistema de login con JWT
-[ ] Middleware de autenticacion en rutas protegidas
-[ ] Roles de usuario (admin, medico, secretaria)
-[ ] Almacenamiento de tokens en localStorage
+[X] Sistema de login con JWT
+[X] Middleware de autenticacion en rutas protegidas
+[X] Roles de usuario (admin, medico, secretaria)
+[X] Almacenamiento de tokens en localStorage
+[ ] Logout con invalidacion de token
 
 MONITOREO:
-[ ] Endpoint /health para cada nodo
+[X] Endpoint /health para cada nodo
 [ ] Dashboard de monitoreo con metricas
 [ ] Logs centralizados
 [ ] Alertas de monitoreo
@@ -136,7 +158,7 @@ RENDIMIENTO:
 SECURITY:
 [ ] Autenticacion MongoDB (actualmente sin auth)
 [ ] HTTPS en nginx
-[ ] Variables de entorno para secretos
+[X] Variables de entorno para secretos (.env)
 [ ] Rate limiting
 
 ================================================================================
@@ -224,8 +246,7 @@ ClinicaDental/
 └── README.md
 
 ================================================================================
-                            CONFIGURACION ACTUAL
-================================================================================
+CONFIGURACION ACTUAL
 
 PUERTOS:
 - Nginx: 8080 (API + Frontend)
@@ -233,16 +254,29 @@ PUERTOS:
 - Node2: 3002
 - Node3: 3003
 - Mongo1: 27017
-- Mongo2: 27018
-- Mongo3: 27019
 - Frontend: 5173
 
 VARIABLES DE ENTORNO (Backend):
 - PORT: 3000
 - NODE_NAME: node1/node2/node3
 - LATENCY_MS: 0
-- MONGO_HOSTS: mongo1:27017,mongo2:27017,mongo3:27017
+- MONGO_HOSTS: clinica_mongo1:27017
 - MONGO_DB: clinica_dental
-- MONGO_REPLICA_SET: clinica_rs
+
+USUARIOS SEED:
+- secretaria@clinica.com / secreta123 (rol: secretaria)
+- medico@clinica.com / medico123 (rol: medico)
+- paciente@clinica.com / paciente123 (rol: paciente)
+
+ISSUES CONOCIDOS:
+- Login puede regresar 401 si el usuario no existe o password incorrecta
+- WebSocket HMR warning en navegador (no afecta funcionalidad)
+- Posibles 2 bases de datos (clinica_dental vs clinicadental)
+
+PRÓXIMOS PASOS:
+- Verificar login funciona correctamente
+- Test flujo completo paciente (login -> ver datos -> agendar cita)
+- Test flujo secretaria (login -> CRUD pacientes/medicos)
+- Completar seed de medicos y pacientes reales
 
 ================================================================================

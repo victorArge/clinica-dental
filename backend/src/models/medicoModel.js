@@ -7,7 +7,7 @@ const medicoSchema = new mongoose.Schema({
   telefono: { type: String, maxlength: 20 },
   email: { type: String, maxlength: 100 },
   matricula: { type: String, required: true, maxlength: 50 },
-  estado: { type: Boolean, default: true }
+  activo: { type: Boolean, default: true }
 });
 
 medicoSchema.index({ matricula: 1 }, { unique: true });
@@ -15,7 +15,7 @@ medicoSchema.index({ matricula: 1 }, { unique: true });
 const MedicoModel = mongoose.model('Medico', medicoSchema);
 
 MedicoModel.getAll = async () => {
-  const medicos = await MedicoModel.find({ estado: true }).sort({ _id: 1 });
+  const medicos = await MedicoModel.find({ activo: true }).sort({ _id: 1 });
   return medicos.map(m => ({ ...m.toObject(), id: m._id.toString().slice(-8), _id: m._id }));
 };
 

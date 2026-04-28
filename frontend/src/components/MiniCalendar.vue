@@ -46,7 +46,8 @@ import { ref, computed, watch } from 'vue';
 
 const props = defineProps({
   modelValue: String,
-  appointments: { type: Array, default: () => [] }
+  appointments: { type: Array, default: () => [] },
+  medicoId: { type: String, default: null }
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -78,7 +79,11 @@ const selectedDateLabel = computed(() => {
 
 const timeSlots = computed(() => {
   const slots = [];
-  const bookedHours = props.appointments
+  const relevantAppointments = props.medicoId
+    ? props.appointments.filter(a => a.medico_id === props.medicoId)
+    : props.appointments;
+
+  const bookedHours = relevantAppointments
     .filter(a => {
       const d = new Date(a.fecha_hora);
       return d.getFullYear() === currentYear.value && d.getMonth() === currentMonth.value && d.getDate() === selectedDay.value;

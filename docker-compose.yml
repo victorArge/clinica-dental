@@ -69,6 +69,18 @@ services:
       mongo1:
         condition: service_healthy
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: clinica_frontend
+    networks:
+      - clinica-net
+    depends_on:
+      - node1
+      - node2
+      - node3
+
   nginx:
     build:
       context: ./nginx
@@ -79,21 +91,7 @@ services:
     networks:
       - clinica-net
     depends_on:
-      - node1
-      - node2
-      - node3
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: clinica_frontend
-    ports:
-      - "5173:5173"
-    networks:
-      - clinica-net
-    depends_on:
-      - nginx
+      - frontend
 
 networks:
   clinica-net:

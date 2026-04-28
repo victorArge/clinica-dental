@@ -129,6 +129,12 @@
           :error="registerForm.errors.apellido"
           @blur="registerForm.setFieldTouched('apellido')"
         />
+        <BaseInput
+          v-model="registerForm.values.telefono"
+          label="Teléfono"
+          maxlength="10"
+          placeholder="10 dígitos"
+        />
         <BaseButton
           type="submit"
           variant="primary"
@@ -183,7 +189,7 @@ const loginForm = useForm(
 );
 
 const registerForm = useForm(
-  { email: '', password: '', nombre: '', apellido: '' },
+  { email: '', password: '', nombre: '', apellido: '', telefono: '' },
   {
     email: [required('El email es requerido'), email('Email inválido')],
     password: [required('La contraseña es requerida')],
@@ -228,6 +234,7 @@ const handleRegister = async () => {
         password: registerForm.values.password,
         nombre: registerForm.values.nombre,
         apellido: registerForm.values.apellido,
+        telefono: registerForm.values.telefono,
         rol: 'paciente'
       })
     });

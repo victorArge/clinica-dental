@@ -58,7 +58,7 @@
       <form @submit.prevent="savePaciente">
         <BaseInput v-model="form.values.nombre" label="Nombre *" :error="form.errors.nombre" @blur="form.setFieldTouched('nombre')" />
         <BaseInput v-model="form.values.apellido" label="Apellido *" :error="form.errors.apellido" @blur="form.setFieldTouched('apellido')" />
-        <BaseInput v-model="form.values.telefono" label="Teléfono" />
+        <BaseInput v-model="form.values.telefono" label="Teléfono" maxlength="10" placeholder="10 dígitos" />
         <BaseInput v-model="form.values.email" label="Email" type="email" :error="form.errors.email" @blur="form.setFieldTouched('email')" />
         <BaseInput v-model="form.values.direccion" label="Dirección" />
         <BaseInput v-model="form.values.fecha_nacimiento" label="Fecha de Nacimiento" type="date" />

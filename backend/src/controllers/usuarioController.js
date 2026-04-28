@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 const UsuarioController = {
   async register(req, res) {
     try {
-      const { email, password, rol, nombre, apellido } = req.body;
+      const { email, password, rol, nombre, apellido, telefono } = req.body;
 
       const existingUser = await UsuarioModel.findOne({ email });
       if (existingUser) {
@@ -36,6 +36,7 @@ const UsuarioController = {
           nombre,
           apellido,
           email,
+          telefono,
           activo: true
         });
         await paciente.save();

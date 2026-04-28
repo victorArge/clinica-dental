@@ -17,7 +17,8 @@ CitaModel.getAll = async () => {
     .populate('medico_id', 'nombre apellido especialidad')
     .sort({ fecha_hora: -1 });
   return citas.map(c => ({
-    id: c._id,
+    id: c._id.toString().slice(-8),
+    _id: c._id,
     paciente_id: c.paciente_id?._id,
     paciente_nombre: c.paciente_id?.nombre || '',
     paciente_apellido: c.paciente_id?.apellido || '',

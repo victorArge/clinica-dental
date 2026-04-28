@@ -9,7 +9,7 @@
         :id="inputId"
         v-bind="$attrs"
         :type="computedType"
-        :value="value"
+        :value="modelValue"
         :disabled="disabled"
         :placeholder="placeholder"
         class="input-field"

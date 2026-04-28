@@ -34,6 +34,7 @@ app.use((req, res, next) => {
 const pacienteRoutes = require('./routes/pacienteRoutes');
 const medicoRoutes = require('./routes/medicoRoutes');
 const citaRoutes = require('./routes/citaRoutes');
+const usuarioRoutes = require('./routes/usuarioRoutes');
 
 app.get('/', (req, res) => {
   res.json({ 
@@ -54,18 +55,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body;
-  if (email && password) {
-    res.json({
-      token: 'demo-token-' + Date.now(),
-      user: { email, nombre: 'Dr. Demo' }
-    });
-  } else {
-    res.status(400).json({ error: 'Credenciales requeridas' });
-  }
-});
-
+app.use('/api/auth', usuarioRoutes);
 app.use('/api/pacientes', pacienteRoutes);
 app.use('/api/medicos', medicoRoutes);
 app.use('/api/citas', citaRoutes);

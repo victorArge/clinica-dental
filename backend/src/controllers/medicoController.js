@@ -1,4 +1,6 @@
 const MedicoModel = require('../models/medicoModel');
+const UsuarioModel = require('../models/usuarioModel');
+const bcrypt = require('bcryptjs');
 
 const MedicoController = {
   async getAll(req, res) {
@@ -22,7 +24,27 @@ const MedicoController = {
 
   async create(req, res) {
     try {
-      const medico = await MedicoModel.create(req.body);
+      const { email, password, ...medicoData } = req.body;
+
+      const medico = await MedicoModel.create(medicoData);
+
+      if (email) {
+        const tempPassword = password || `clinica${Date.now().toString().slice(-6)}`;
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+        await UsuarioModel.create({
+          email,
+          password: hashedPassword,
+          rol: 'medico',
+          nombre: medicoData.nombre,
+          apellido: medicoData.apellido,
+          entityId: medico._id,
+          rolModel: 'Medico'
+        });
+
+        medico._doc.tempPassword = tempPassword;
+      }
+
       res.status(201).json(medico);
     } catch (error) {
       res.status(500).json({ error: error.message });

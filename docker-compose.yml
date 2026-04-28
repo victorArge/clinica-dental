@@ -8,98 +8,12 @@ services:
       - mongo1_data:/data/db
     networks:
       - clinica-net
-    command: ["--replSet", "clinica_rs", "--bind_ip_all"]
+    command: ["--bind_ip_all"]
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 5s
       timeout: 5s
       retries: 5
-
-  mongo2:
-    image: mongo:7
-    container_name: clinica_mongo2
-    ports:
-      - "27018:27017"
-    volumes:
-      - mongo2_data:/data/db
-    networks:
-      - clinica-net
-    command: ["--replSet", "clinica_rs", "--bind_ip_all"]
-    depends_on:
-      mongo1:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  mongo3:
-    image: mongo:7
-    container_name: clinica_mongo3
-    ports:
-      - "27019:27017"
-    volumes:
-      - mongo3_data:/data/db
-    networks:
-      - clinica-net
-    command: ["--replSet", "clinica_rs", "--bind_ip_all"]
-    depends_on:
-      mongo2:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  mongo-init:
-    image: mongo:7
-    container_name: clinica_mongo_init
-    depends_on:
-      - mongo1
-      - mongo2
-      - mongo3
-    networks:
-      - clinica-net
-    entrypoint: ["bash", "-c"]
-    command: 
-      - |
-        sleep 10
-        mongosh --host mongo1 --eval '
-        rs.initiate({
-          _id: "clinica_rs",
-          members: [
-            { _id: 0, host: "mongo1:27017" },
-            { _id: 1, host: "mongo2:27017" },
-            { _id: 2, host: "mongo3:27017" }
-          ]
-        })
-        '
-    profiles:
-      - distributed
-
-  db:
-    image: postgres:15-alpine
-    container_name: clinica_db
-    environment:
-      POSTGRES_DB: clinica_dental
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 2004
-      POSTGRES_HOST_AUTH_METHOD: trust
-    ports:
-      - "5432:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    networks:
-      - clinica-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    profiles:
-      - postgres
 
   node1:
     build:
@@ -109,12 +23,8 @@ services:
     environment:
       PORT: 3000
       NODE_NAME: node1
-      LATENCY_MS: 0
-      MONGO_HOSTS: mongo1:27017,mongo2:27017,mongo3:27017
+      MONGO_HOSTS: clinica_mongo1:27017
       MONGO_DB: clinica_dental
-      MONGO_USER: admin
-      MONGO_PASSWORD: 2004
-      MONGO_REPLICA_SET: clinica_rs
     ports:
       - "3001:3000"
     networks:
@@ -122,13 +32,6 @@ services:
     depends_on:
       mongo1:
         condition: service_healthy
-      mongo2:
-        condition: service_healthy
-      mongo3:
-        condition: service_healthy
-    profiles:
-      - normal
-      - distributed
 
   node2:
     build:
@@ -138,12 +41,8 @@ services:
     environment:
       PORT: 3000
       NODE_NAME: node2
-      LATENCY_MS: 0
-      MONGO_HOSTS: mongo1:27017,mongo2:27017,mongo3:27017
+      MONGO_HOSTS: clinica_mongo1:27017
       MONGO_DB: clinica_dental
-      MONGO_USER: admin
-      MONGO_PASSWORD: 2004
-      MONGO_REPLICA_SET: clinica_rs
     ports:
       - "3002:3000"
     networks:
@@ -151,13 +50,6 @@ services:
     depends_on:
       mongo1:
         condition: service_healthy
-      mongo2:
-        condition: service_healthy
-      mongo3:
-        condition: service_healthy
-    profiles:
-      - normal
-      - distributed
 
   node3:
     build:
@@ -167,12 +59,8 @@ services:
     environment:
       PORT: 3000
       NODE_NAME: node3
-      LATENCY_MS: 0
-      MONGO_HOSTS: mongo1:27017,mongo2:27017,mongo3:27017
+      MONGO_HOSTS: clinica_mongo1:27017
       MONGO_DB: clinica_dental
-      MONGO_USER: admin
-      MONGO_PASSWORD: 2004
-      MONGO_REPLICA_SET: clinica_rs
     ports:
       - "3003:3000"
     networks:
@@ -180,13 +68,6 @@ services:
     depends_on:
       mongo1:
         condition: service_healthy
-      mongo2:
-        condition: service_healthy
-      mongo3:
-        condition: service_healthy
-    profiles:
-      - normal
-      - distributed
 
   nginx:
     build:
@@ -201,11 +82,7 @@ services:
       - node1
       - node2
       - node3
-    profiles:
-      - normal
-      - distributed
 
-  # Frontend service
   frontend:
     build:
       context: ./frontend
@@ -215,9 +92,8 @@ services:
       - "5173:5173"
     networks:
       - clinica-net
-    profiles:
-      - normal
-      - distributed
+    depends_on:
+      - nginx
 
 networks:
   clinica-net:
@@ -225,5 +101,3 @@ networks:
 
 volumes:
   mongo1_data:
-  mongo2_data:
-  mongo3_data:

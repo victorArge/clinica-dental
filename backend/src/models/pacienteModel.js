@@ -14,7 +14,8 @@ const pacienteSchema = new mongoose.Schema({
 const PacienteModel = mongoose.model('Paciente', pacienteSchema);
 
 PacienteModel.getAll = async () => {
-  return await PacienteModel.find({ estado: true }).sort({ _id: 1 });
+  const pacientes = await PacienteModel.find({ estado: true }).sort({ _id: 1 });
+  return pacientes.map(p => ({ ...p.toObject(), id: p._id.toString().slice(-8) }));
 };
 
 PacienteModel.getById = async (id) => {

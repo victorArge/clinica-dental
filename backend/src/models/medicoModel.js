@@ -15,7 +15,8 @@ medicoSchema.index({ matricula: 1 }, { unique: true });
 const MedicoModel = mongoose.model('Medico', medicoSchema);
 
 MedicoModel.getAll = async () => {
-  return await MedicoModel.find({ estado: true }).sort({ _id: 1 });
+  const medicos = await MedicoModel.find({ estado: true }).sort({ _id: 1 });
+  return medicos.map(m => ({ ...m.toObject(), id: m._id.toString().slice(-8), _id: m._id }));
 };
 
 MedicoModel.getById = async (id) => {

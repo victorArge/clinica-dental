@@ -93,7 +93,7 @@ onUnmounted(() => {
   display: flex; transition: all var(--duration-fast) var(--ease-out);
 }
 .close-btn:hover { background: rgba(255,255,255,.1); color: var(--text); }
-.modal-body { color: var(--text); }
+.modal-body { color: var(--text); max-height: 70vh; overflow-y: auto; }
 .modal-footer { margin-top: var(--space-6); display: flex; gap: var(--space-3); justify-content: flex-end; }
 
 .modal-enter-active, .modal-leave-active { transition: all var(--duration-normal) var(--ease-out); }

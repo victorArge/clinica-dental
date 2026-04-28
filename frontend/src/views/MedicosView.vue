@@ -70,8 +70,16 @@
           @blur="form.setFieldTouched('especialidad')"
         />
         <BaseInput v-model="form.values.telefono" label="Teléfono" />
-        <BaseInput v-model="form.values.email" label="Email" type="email" :error="form.errors.email" @blur="form.setFieldTouched('email')" />
+        <BaseInput v-model="form.values.email" label="Email del Doctor" type="email" hint="Para acceso del médico" />
+        <BaseInput v-model="form.values.password" label="Contraseña" type="password" hint="Dejar vacío para generar automáticamente" toggle-password />
         <BaseInput v-model="form.values.matricula" label="Matrícula *" :error="form.errors.matricula" @blur="form.setFieldTouched('matricula')" />
+
+        <div v-if="tempPassword" class="temp-password-info">
+          <strong>Cuenta creada!</strong><br/>
+          Email: {{ form.values.email }}<br/>
+          Contraseña temporal: <code>{{ tempPassword }}</code><br/>
+          <small>El médico deberá cambiar su contraseña al primer ingreso.</small>
+        </div>
 
         <div class="btn-group">
           <BaseButton type="submit" :loading="saving">{{ editing ? 'Actualizar' : 'Crear' }}</BaseButton>
@@ -101,6 +109,7 @@ const loading = ref(false);
 const saving = ref(false);
 const showModal = ref(false);
 const editing = ref(null);
+const tempPassword = ref(null);
 
 const especialidades = [
   { value: 'Ortodoncia', label: 'Ortodoncia' },
@@ -122,8 +131,8 @@ const columns = [
 ];
 
 const form = useForm(
-  { nombre: '', apellido: '', especialidad: '', telefono: '', email: '', matricula: '' },
-  { nombre: [required('El nombre es requerido')], apellido: [required('El apellido es requerido')], email: [email('Email inválido')], matricula: [required('La matrícula es requerida')] }
+  { nombre: '', apellido: '', especialidad: '', telefono: '', email: '', password: '', matricula: '' },
+  { nombre: [required('El nombre es requerido')], apellido: [required('El apellido es requerido')], matricula: [required('La matrícula es requerida')] }
 );
 
 const loadMedicos = async () => {
@@ -136,9 +145,11 @@ const loadMedicos = async () => {
 const getInitials = (name) => name ? name.charAt(0).toUpperCase() : '?';
 
 const openModal = (medico = null) => {
+  tempPassword.value = null;
   if (medico) {
     editing.value = medico.id;
     Object.keys(form.values).forEach(k => { form.values[k] = medico[k] ?? ''; });
+    form.values.password = '';
   } else {
     editing.value = null;
     form.reset();
@@ -146,17 +157,23 @@ const openModal = (medico = null) => {
   showModal.value = true;
 };
 
-const closeModal = () => { showModal.value = false; editing.value = null; };
+const closeModal = () => { showModal.value = false; editing.value = null; tempPassword.value = null; };
 
 const saveMedico = async () => {
   if (!form.validateAll()) return;
   saving.value = true;
   try {
     if (editing.value) { await updateMedico(editing.value, form.values); toast.success('Médico actualizado'); }
-    else { await createMedico(form.values); toast.success('Médico creado'); }
+    else {
+      const result = await createMedico(form.values);
+      toast.success('Médico creado');
+      if (result.tempPassword) {
+        tempPassword.value = result.tempPassword;
+      }
+    }
     closeModal();
     loadMedicos();
-  } catch (e) { toast.error('Error guardando médico'); }
+  } catch (e) { toast.error('Error guardando médico: ' + e.message); }
   finally { saving.value = false; }
 };
 
@@ -182,4 +199,19 @@ onMounted(loadMedicos);
 }
 .actions { display: flex; gap: var(--space-2); }
 .empty-content { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); color: var(--muted); }
+.temp-password-info {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: var(--space-4);
+  color: var(--green);
+  font-size: 13px;
+}
+.temp-password-info code {
+  background: rgba(0,0,0,0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}
 </style>

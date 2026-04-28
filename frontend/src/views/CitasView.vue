@@ -54,8 +54,20 @@
         <template #cell-fecha_hora="{ value }">{{ formatDate(value) }}</template>
         <template #cell-duracion_minutos="{ value }">{{ value }} min</template>
 
-        <template #cell-estado="{ value }">
-          <BaseBadge :variant="getEstadoVariant(value)">{{ value }}</BaseBadge>
+        <template #cell-estado="{ value, row }">
+          <div class="estado-actions">
+            <BaseBadge :variant="getEstadoVariant(value)">{{ value }}</BaseBadge>
+            <div v-if="value === 'programada'" class="quick-actions">
+              <button class="quick-btn success" @click.stop="updateEstado(row._id, 'completada')" title="Marcar completada">✓</button>
+              <button class="quick-btn danger" @click.stop="updateEstado(row._id, 'cancelada')" title="Cancelar">✕</button>
+            </div>
+            <div v-if="value === 'completada'" class="quick-actions">
+              <button class="quick-btn warning" @click.stop="updateEstado(row._id, 'programada')" title="Volver a programar">↩</button>
+            </div>
+            <div v-if="value === 'cancelada'" class="quick-actions">
+              <button class="quick-btn info" @click.stop="updateEstado(row._id, 'programada')" title="Reactivar">↩</button>
+            </div>
+          </div>
         </template>
 
         <template #cell-acciones="{ row }">
@@ -79,7 +91,7 @@
       </BaseTable>
     </BaseCard>
 
-    <BaseModal v-model="showModal" :title="editing ? 'Editar Cita' : 'Nueva Cita'" max-width="520px">
+    <BaseModal v-model="showModal" :title="editing ? 'Editar Cita' : 'Nueva Cita'" max-width="500px">
       <form @submit.prevent="saveCita">
         <BaseSelect
           v-model="form.values.paciente_id"
@@ -99,7 +111,14 @@
           searchable
           @blur="form.setFieldTouched('medico_id')"
         />
-        <BaseInput v-model="form.values.fecha_hora" label="Fecha y Hora *" type="datetime-local" :error="form.errors.fecha_hora" @blur="form.setFieldTouched('fecha_hora')" />
+        <div class="calendar-wrapper">
+          <label class="calendar-label">Fecha y Hora *</label>
+          <MiniCalendar
+            v-model="form.values.fecha_hora"
+            :appointments="citas"
+          />
+          <span v-if="form.errors.fecha_hora" class="error-text">{{ form.errors.fecha_hora }}</span>
+        </div>
         <BaseSelect
           v-model="form.values.duracion_minutos"
           label="Duración"
@@ -133,6 +152,7 @@ import BaseModal from '../components/BaseModal.vue';
 import BaseInput from '../components/BaseInput.vue';
 import BaseSelect from '../components/BaseSelect.vue';
 import BaseBadge from '../components/BaseBadge.vue';
+import MiniCalendar from '../components/MiniCalendar.vue';
 
 const toast = useToastStore();
 const citas = ref([]);
@@ -152,8 +172,8 @@ const especialidades = [
   { value: 'Pediatría', label: 'Pediatría' }
 ];
 
-const pacientesOptions = computed(() => pacientes.value.map(p => ({ value: p.id, label: `${p.nombre} ${p.apellido}` })));
-const medicosOptions = computed(() => medicos.value.map(m => ({ value: m.id, label: `${m.nombre} ${m.apellido} - ${m.especialidad}` })));
+const pacientesOptions = computed(() => pacientes.value.map(p => ({ value: p._id, label: `${p.nombre} ${p.apellido}` })));
+const medicosOptions = computed(() => medicos.value.map(m => ({ value: m._id, label: `${m.nombre} ${m.apellido} - ${m.especialidad}` })));
 const duracionOptions = [
   { value: 15, label: '15 minutos' },
   { value: 30, label: '30 minutos' },
@@ -238,6 +258,14 @@ const deleteCitaConfirm = async (id) => {
   }
 };
 
+const updateEstado = async (id, nuevoEstado) => {
+  try {
+    await updateCita(id, { estado: nuevoEstado });
+    toast.success(`Cita marcada como ${nuevoEstado}`);
+    loadData();
+  } catch (e) { toast.error('Error actualizando estado'); }
+};
+
 onMounted(loadData);
 </script>
 
@@ -256,4 +284,22 @@ onMounted(loadData);
 }
 .actions { display: flex; gap: var(--space-2); }
 .empty-content { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); color: var(--muted); }
+.calendar-wrapper { margin-bottom: var(--space-4); }
+.calendar-label { display: block; font-size: var(--text-sm); color: var(--muted); font-weight: 500; margin-bottom: var(--space-2); }
+.error-text { font-size: var(--text-xs); color: var(--danger); margin-top: var(--space-1); display: block; }
+.estado-actions { display: flex; align-items: center; gap: var(--space-2); }
+.quick-actions { display: flex; gap: 4px; }
+.quick-btn {
+  width: 24px; height: 24px; border-radius: 4px; border: none;
+  cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.quick-btn.success { background: rgba(34, 197, 94, 0.2); color: var(--green); }
+.quick-btn.success:hover { background: var(--green); color: white; }
+.quick-btn.danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+.quick-btn.danger:hover { background: var(--danger); color: white; }
+.quick-btn.warning { background: rgba(234, 179, 8, 0.2); color: #eab308; }
+.quick-btn.warning:hover { background: #eab308; color: white; }
+.quick-btn.info { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+.quick-btn.info:hover { background: #3b82f6; color: white; }
 </style>

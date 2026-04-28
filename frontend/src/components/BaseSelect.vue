@@ -38,7 +38,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
   modelValue: [String, Number],
@@ -82,7 +82,6 @@ const selectOption = (option) => {
 };
 
 const handleClickOutside = (e) => { if (selectRef.value && !selectRef.value.contains(e.target)) isOpen.value = false; };
-import { onMounted, onUnmounted } from 'vue';
 onMounted(() => document.addEventListener('click', handleClickOutside));
 onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 </script>

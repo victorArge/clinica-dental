@@ -99,4 +99,11 @@ onUnmounted(() => {
 .modal-enter-active, .modal-leave-active { transition: all var(--duration-normal) var(--ease-out); }
 .modal-enter-from, .modal-leave-to { opacity: 0; }
 .modal-enter-from .modal, .modal-leave-to .modal { transform: scale(0.95) translateY(10px); }
+
+@media (max-width: 480px) {
+  .modal-overlay { padding: var(--space-2); align-items: flex-end; }
+  .modal { padding: var(--space-4); border-radius: var(--radius) var(--radius) 0 0; max-height: 90vh; }
+  .modal-header { margin-bottom: var(--space-4); }
+  .modal-title { font-size: var(--text-base); }
+}
 </style>

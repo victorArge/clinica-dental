@@ -164,4 +164,18 @@ th.sortable:hover { color: var(--text); }
 .page-btn:hover:not(:disabled) { background: rgba(255,255,255,.12); color: var(--text); }
 .page-btn.active { background: var(--primary); color: #0b1020; }
 .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+@media (max-width: 768px) {
+  .table-header { flex-direction: column; align-items: flex-start; }
+  .search-input { width: 100%; }
+  th, td { padding: 10px 8px; font-size: 12px; }
+  .table-pagination { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 480px) {
+  .table-wrapper { font-size: 12px; }
+  th, td { padding: 8px 6px; }
+  .page-btn { width: 28px; height: 28px; font-size: 12px; }
+  .pagination-info { font-size: 11px; }
+}
 </style>

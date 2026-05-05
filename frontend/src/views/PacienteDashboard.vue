@@ -26,32 +26,35 @@
       </div>
 
       <div class="paciente-column">
-        <BaseCard class="cita-card">
+        <BaseCard class="citas-card">
           <div class="card-header">
-            <h3>Mi Próxima Cita</h3>
+            <h3>Mis Próximas Citas</h3>
+            <span class="citas-count">{{ misCitasProximas.length }}</span>
           </div>
 
-          <div v-if="miProximaCita" class="proxima-cita">
-            <div class="cita-medico">
-              <span class="icon">👨‍⚕️</span>
-              <div>
-                <strong>Dr. {{ miProximaCita.medico_nombre }} {{ miProximaCita.medico_apellido }}</strong>
-                <small>{{ miProximaCita.medico_especialidad }}</small>
+          <div v-if="misCitasProximas.length" class="citas-list">
+            <div v-for="cita in misCitasProximas" :key="cita._id" class="cita-item">
+              <div class="cita-medico">
+                <span class="icon">👨‍⚕️</span>
+                <div>
+                  <strong>Dr. {{ cita.medico_nombre }} {{ cita.medico_apellido }}</strong>
+                  <small>{{ cita.medico_especialidad }}</small>
+                </div>
               </div>
-            </div>
-            <div class="cita-detalles">
-              <div class="cita-fecha">
-                <span class="icon">📅</span>
-                {{ formatDate(miProximaCita.fecha_hora) }}
+              <div class="cita-detalles">
+                <div class="cita-fecha">
+                  <span class="icon">📅</span>
+                  {{ formatDate(cita.fecha_hora) }}
+                </div>
+                <div class="cita-hora">
+                  <span class="icon">⏰</span>
+                  {{ cita.duracion_minutos }} min
+                </div>
               </div>
-              <div class="cita-hora">
-                <span class="icon">⏰</span>
-                {{ miProximaCita.duracion_minutos }} min
+              <div class="cita-motivo">
+                <span class="icon">📋</span>
+                {{ cita.motivo || 'Consulta general' }}
               </div>
-            </div>
-            <div class="cita-motivo">
-              <span class="icon">📋</span>
-              {{ miProximaCita.motivo || 'Consulta general' }}
             </div>
           </div>
 
@@ -163,6 +166,11 @@ const misCitasCanceladas = computed(() => misCitas.value.filter(c => c.estado ==
 
 const now = new Date();
 const miProximaCita = computed(() => misCitas.value.find(c => new Date(c.fecha_hora) > now && c.estado === 'programada'));
+const misCitasProximas = computed(() =>
+  misCitas.value
+    .filter(c => new Date(c.fecha_hora) > now && c.estado === 'programada')
+    .sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora))
+);
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '-';
@@ -242,11 +250,15 @@ onMounted(loadData);
 .dato-label { font-size: var(--text-xs); color: var(--muted); text-transform: uppercase; }
 .dato-value { font-size: var(--text-base); }
 
-.cita-card { flex: 1; }
+.citas-card { flex: 1; }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
 .card-header h3 { margin: 0; font-size: var(--text-lg); }
-
-.proxima-cita { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); background: rgba(2,6,23,.5); border-radius: 12px; border: 1px solid rgba(255,255,255,.1); }
+.citas-count {
+  background: var(--primary); color: #0b1020; font-size: var(--text-sm); font-weight: 600;
+  padding: 2px 10px; border-radius: 12px;
+}
+.citas-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.cita-item { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); background: rgba(2,6,23,.5); border-radius: 12px; border: 1px solid rgba(255,255,255,.1); }
 .cita-medico { display: flex; align-items: center; gap: var(--space-3); }
 .cita-medico .icon { font-size: 22px; }
 .cita-medico strong { display: block; font-size: var(--text-base); }
@@ -269,4 +281,20 @@ onMounted(loadData);
 .error-text { font-size: var(--text-xs); color: var(--danger); }
 .error { color: var(--danger); text-align: center; margin: var(--space-3) 0 0; font-size: var(--text-sm); }
 .success { color: var(--green); text-align: center; margin: var(--space-3) 0 0; font-size: var(--text-sm); }
+
+@media (max-width: 768px) {
+  .page { padding: var(--space-4); }
+  .paciente-layout { grid-template-columns: 1fr; gap: var(--space-4); }
+  .page-header { flex-direction: column; gap: var(--space-3); align-items: flex-start; }
+  .page-header h2 { font-size: 20px; }
+}
+
+@media (max-width: 480px) {
+  .page { padding: var(--space-3); }
+  .citas-list { gap: var(--space-2); }
+  .cita-item { padding: var(--space-3); }
+  .agendar-btn { width: 100%; }
+  .form-actions { flex-direction: column; }
+  .form-actions > * { width: 100%; }
+}
 </style>

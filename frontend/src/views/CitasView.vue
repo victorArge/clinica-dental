@@ -43,7 +43,8 @@
         <template #cell-paciente_nombre="{ row }">
           <div class="patient-cell">
             <div class="avatar">{{ getInitials(row.paciente_nombre) }}</div>
-            {{ row.paciente_nombre }} {{ row.paciente_apellido }}
+            <span class="patient-name">{{ row.paciente_nombre }} {{ row.paciente_apellido }}</span>
+            <button class="schedule-btn info" @click.stop="reprogramar(row)" title="Reprogramar cita">🔄</button>
           </div>
         </template>
 
@@ -91,48 +92,54 @@
       </BaseTable>
     </BaseCard>
 
-    <BaseModal v-model="showModal" :title="editing ? 'Editar Cita' : 'Nueva Cita'" max-width="500px">
+    <BaseModal v-model="showModal" :title="modalTitle" max-width="500px">
       <form @submit.prevent="saveCita">
-        <BaseSelect
-          v-model="form.values.paciente_id"
-          label="Paciente *"
-          :options="pacientesOptions"
-          placeholder="Seleccionar paciente..."
-          :error="form.errors.paciente_id"
-          searchable
-          @blur="form.setFieldTouched('paciente_id')"
-        />
-        <BaseSelect
-          v-model="form.values.medico_id"
-          label="Médico *"
-          :options="medicosOptions"
-          placeholder="Seleccionar médico..."
-          :error="form.errors.medico_id"
-          searchable
-          @blur="form.setFieldTouched('medico_id')"
-        />
+        <template v-if="modoRapido !== 'reagendar'">
+          <BaseSelect
+            v-if="modoRapido !== 'reprogramar'"
+            v-model="form.values.paciente_id"
+            label="Paciente *"
+            :options="pacientesOptions"
+            placeholder="Seleccionar paciente..."
+            :error="form.errors.paciente_id"
+            searchable
+            @blur="form.setFieldTouched('paciente_id')"
+          />
+          <button type="button" class="add-link-btn" @click="goToPacientes">+ Agregar nuevo paciente</button>
+          <BaseSelect
+            v-model="form.values.medico_id"
+            label="Médico *"
+            :options="medicosOptions"
+            placeholder="Seleccionar médico..."
+            :error="form.errors.medico_id"
+            searchable
+            @blur="form.setFieldTouched('medico_id')"
+          />
+        </template>
         <div class="calendar-wrapper">
-          <label class="calendar-label">Fecha y Hora *</label>
+          <label class="calendar-label">Fecha y Hora {{ modoRapido ? '*' : '' }}</label>
           <MiniCalendar
             v-model="form.values.fecha_hora"
             :appointments="citas"
           />
           <span v-if="form.errors.fecha_hora" class="error-text">{{ form.errors.fecha_hora }}</span>
         </div>
-        <BaseSelect
-          v-model="form.values.duracion_minutos"
-          label="Duración"
-          :options="duracionOptions"
-        />
-        <BaseInput v-model="form.values.motivo" label="Motivo" placeholder="Motivo de la consulta..." />
-        <BaseSelect
-          v-model="form.values.estado"
-          label="Estado"
-          :options="estadoOptions"
-        />
+        <template v-if="modoRapido !== 'reagendar'">
+          <BaseSelect
+            v-model="form.values.duracion_minutos"
+            label="Duración"
+            :options="duracionOptions"
+          />
+          <BaseInput v-model="form.values.motivo" label="Motivo" placeholder="Motivo de la consulta..." />
+          <BaseSelect
+            v-model="form.values.estado"
+            label="Estado"
+            :options="estadoOptions"
+          />
+        </template>
 
         <div class="btn-group">
-          <BaseButton type="submit" :loading="saving">{{ editing ? 'Actualizar' : 'Crear' }}</BaseButton>
+          <BaseButton type="submit" :loading="saving">{{ modalButtonLabel }}</BaseButton>
           <BaseButton variant="secondary" @click="closeModal">Cancelar</BaseButton>
         </div>
       </form>
@@ -141,7 +148,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { getCitas, getPacientes, getMedicos, createCita, updateCita, deleteCita } from '../services/api';
 import { useToastStore } from '../stores/useToastStore';
 import { useForm, required } from '../composables/useForm';
@@ -155,6 +163,8 @@ import BaseBadge from '../components/BaseBadge.vue';
 import MiniCalendar from '../components/MiniCalendar.vue';
 
 const toast = useToastStore();
+const route = useRoute();
+const router = useRouter();
 const citas = ref([]);
 const pacientes = ref([]);
 const medicos = ref([]);
@@ -162,6 +172,19 @@ const loading = ref(false);
 const saving = ref(false);
 const showModal = ref(false);
 const editing = ref(null);
+const modoRapido = ref(null);
+
+const modalTitle = computed(() => {
+  if (modoRapido.value === 'reagendar') return 'Reagendar Cita';
+  if (modoRapido.value === 'reprogramar') return 'Reprogramar Cita';
+  return editing.value ? 'Editar Cita' : 'Nueva Cita';
+});
+
+const modalButtonLabel = computed(() => {
+  if (modoRapido.value === 'reagendar') return 'Guardar Fecha';
+  if (modoRapido.value === 'reprogramar') return 'Guardar Cambios';
+  return editing.value ? 'Actualizar' : 'Crear';
+});
 
 const especialidades = [
   { value: 'Ortodoncia', label: 'Ortodoncia' },
@@ -225,7 +248,8 @@ const formatDate = (dateStr) => {
   return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 };
 
-const openModal = (cita = null) => {
+const openModal = (cita = null, modo = null) => {
+  modoRapido.value = modo;
   if (cita) {
     editing.value = cita.id;
     Object.keys(form.values).forEach(k => { form.values[k] = cita[k] ?? form.values[k]; });
@@ -237,9 +261,24 @@ const openModal = (cita = null) => {
   showModal.value = true;
 };
 
-const closeModal = () => { showModal.value = false; editing.value = null; };
+const reprogramar = (cita) => { openModal(cita, 'reprogramar'); };
+const goToPacientes = () => { router.push('/pacientes'); };
+
+const closeModal = () => { showModal.value = false; editing.value = null; modoRapido.value = null; };
 
 const saveCita = async () => {
+  if (modoRapido.value === 'reagendar') {
+    if (!form.values.fecha_hora) { toast.error('Selecciona una nueva fecha y hora'); return; }
+    saving.value = true;
+    try {
+      await updateCita(editing.value, { fecha_hora: form.values.fecha_hora });
+      toast.success('Cita reagendada');
+      closeModal();
+      loadData();
+    } catch (e) { toast.error('Error reagendando cita'); }
+    finally { saving.value = false; }
+    return;
+  }
   if (!form.validateAll()) return;
   saving.value = true;
   try {
@@ -266,7 +305,20 @@ const updateEstado = async (id, nuevoEstado) => {
   } catch (e) { toast.error('Error actualizando estado'); }
 };
 
-onMounted(loadData);
+let refreshInterval = null;
+
+onMounted(() => {
+  loadData();
+  refreshInterval = setInterval(() => { loadData(); }, 10000);
+  if (route.query.id) {
+    setTimeout(() => {
+      const cita = citas.value.find(c => c.id == route.query.id);
+      if (cita) openModal(cita);
+    }, 500);
+  }
+});
+
+onUnmounted(() => { if (refreshInterval) clearInterval(refreshInterval); });
 </script>
 
 <style scoped>
@@ -276,7 +328,23 @@ onMounted(loadData);
 .mini-card { text-align: center; }
 .stat { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
 .kpi { font-size: var(--text-2xl); font-weight: 700; }
-.patient-cell { display: flex; align-items: center; gap: var(--space-3); }
+.patient-cell { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.patient-name { flex: 1; }
+.quick-schedule-btns { display: flex; gap: 4px; }
+.schedule-btn {
+  width: 28px; height: 28px; border-radius: 6px; border: none;
+  cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.schedule-btn.warning { background: rgba(234, 179, 8, 0.2); color: #eab308; }
+.schedule-btn.warning:hover { background: #eab308; color: white; }
+.schedule-btn.info { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+.schedule-btn.info:hover { background: #3b82f6; color: white; }
+.add-link-btn {
+  background: none; border: none; color: var(--primary); font-size: var(--text-sm);
+  cursor: pointer; padding: 0; margin-top: var(--space-2); text-decoration: underline;
+}
+.add-link-btn:hover { color: var(--primary-dark); }
 .avatar {
   width: 32px; height: 32px; border-radius: 50%;
   background: var(--primary); display: flex; align-items: center; justify-content: center;
@@ -302,4 +370,22 @@ onMounted(loadData);
 .quick-btn.warning:hover { background: #eab308; color: white; }
 .quick-btn.info { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
 .quick-btn.info:hover { background: #3b82f6; color: white; }
+
+@media (max-width: 768px) {
+  .page-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+  .page-header h2 { font-size: 18px; }
+  .grid-3 { grid-template-columns: 1fr; }
+  .patient-cell { gap: var(--space-2); }
+  .patient-name { min-width: 100px; }
+}
+
+@media (max-width: 480px) {
+  .patient-cell { flex-wrap: nowrap; }
+  .patient-name { font-size: 13px; }
+  .schedule-btn { width: 24px; height: 24px; font-size: 12px; }
+  .quick-btn { width: 20px; height: 20px; font-size: 10px; }
+  .btn-group { flex-direction: column; }
+  .btn-group > * { width: 100%; }
+  .modal { padding: 12px; }
+}
 </style>

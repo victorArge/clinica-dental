@@ -51,7 +51,12 @@
               <span>Dr. {{ cita.medico_nombre }} {{ cita.medico_apellido }}</span>
               <small>{{ formatDate(cita.fecha_hora) }}</small>
             </div>
-            <BaseBadge :variant="getEstadoVariant(cita.estado)">{{ cita.estado }}</BaseBadge>
+            <div class="cita-actions">
+              <BaseBadge :variant="getEstadoVariant(cita.estado)">{{ cita.estado }}</BaseBadge>
+              <BaseButton variant="ghost" size="sm" icon-only @click="modificarCita(cita)" title="Modificar cita">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </BaseButton>
+            </div>
           </div>
         </div>
       </BaseCard>
@@ -113,6 +118,8 @@ const getEstadoVariant = (estado) => ({ programada: 'info', completada: 'success
 
 const navigateTo = (path) => router.push(path);
 
+const modificarCita = (cita) => { router.push({ path: '/citas', query: { id: cita.id } }); };
+
 const handleLogout = () => {
   auth.logout();
   router.push('/login');
@@ -146,6 +153,7 @@ onMounted(loadData);
 .empty-state { color: var(--muted); text-align: center; padding: var(--space-6); }
 .citas-list { display: flex; flex-direction: column; gap: var(--space-3); }
 .cita-item { display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); background: rgba(255,255,255,.05); border-radius: 8px; }
+.cita-actions { display: flex; align-items: center; gap: var(--space-2); }
 .cita-info { display: flex; flex-direction: column; gap: 2px; }
 .cita-info strong { font-size: var(--text-sm); }
 .cita-info span { font-size: var(--text-xs); color: var(--muted); }
@@ -163,4 +171,24 @@ onMounted(loadData);
 .nav-card:hover { background: rgba(255,255,255,.1); border-color: var(--primary); }
 .nav-icon { font-size: 32px; display: block; margin-bottom: var(--space-2); }
 .nav-label { font-weight: 600; }
+
+@media (max-width: 900px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .nav-cards { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: 1fr; gap: var(--space-3); }
+  .nav-cards { grid-template-columns: 1fr 1fr; }
+  .page-header { flex-direction: column; gap: var(--space-3); align-items: flex-start; }
+}
+
+@media (max-width: 480px) {
+  .page-header h2 { font-size: 18px; }
+  .nav-cards { grid-template-columns: 1fr; }
+  .action-buttons { flex-direction: column; }
+  .action-buttons > * { width: 100%; }
+  .dashboard-grid { gap: var(--space-3); }
+}
 </style>

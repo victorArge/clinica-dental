@@ -240,4 +240,10 @@ watch(() => props.modelValue, (val) => {
 .slot:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
 .slot.selected { background: var(--primary); color: #0b1020; border-color: var(--primary); }
 .slot.unavailable { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
+
+@media (max-width: 480px) {
+  .mini-calendar { max-width: 100%; padding: 10px; }
+  .slots-grid { grid-template-columns: repeat(3, 1fr); }
+  .day { font-size: 11px; }
+}
 </style>

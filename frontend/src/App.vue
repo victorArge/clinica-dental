@@ -65,10 +65,12 @@ const handleLogout = () => {
 
 <style>
 .app-layout { display: flex; flex-direction: column; min-height: 100vh; }
+.app-layout.has-sidebar { flex-direction: row; }
 .topbar {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 24px; background: rgba(2, 6, 23, 0.95);
   border-bottom: 1px solid rgba(255,255,255,.1);
+  position: sticky; top: 0; z-index: 100;
 }
 .brand { display: flex; align-items: center; gap: 12px; }
 .logo {
@@ -85,16 +87,11 @@ const handleLogout = () => {
   background: rgba(212, 175, 55, 0.2); color: var(--primary);
   font-size: 12px; font-weight: 600;
 }
-.app-layout { display: flex; flex-direction: column; min-height: 100vh; }
-.app-layout { display: flex; flex-direction: column; min-height: 100vh; }
-.topbar { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: rgba(2,6,23,0.95); border-bottom: 1px solid rgba(255,255,255,.1); }
-.brand { display: flex; align-items: center; gap: 12px; }
-.logo { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 16px; }
-.brand h1 { margin: 0; font-size: var(--text-lg); }
-.brand small { color: var(--muted); font-size: 11px; }
-.user-info { display: flex; align-items: center; gap: 16px; }
-.user-role { padding: 4px 12px; border-radius: 20px; background: rgba(212,175,55,0.2); color: var(--primary); font-size: 12px; font-weight: 600; }
-.sidebar { width: 240px; background: rgba(2,6,23,0.8); border-right: 1px solid rgba(255,255,255,.1); padding: 20px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.sidebar {
+  width: 240px; background: rgba(2,6,23,0.8); border-right: 1px solid rgba(255,255,255,.1);
+  padding: 20px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  flex-shrink: 0;
+}
 .nav { display: flex; flex-direction: column; gap: 4px; padding: 0 12px; }
 .nav-link { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 10px; color: #e5e7eb; transition: all 0.2s; text-decoration: none; }
 .nav-link:hover { background: rgba(255,255,255,0.05); }
@@ -102,4 +99,20 @@ const handleLogout = () => {
 .icon { font-size: 18px; }
 .main { flex: 1; padding: 24px; background: var(--background); }
 .main.full-width { width: 100%; }
+
+@media (max-width: 900px) {
+  .app-layout.has-sidebar { flex-direction: column; }
+  .sidebar { display: none; width: 100%; height: auto; position: relative; }
+  .sidebar.open { display: flex; flex-direction: column; }
+  .topbar { padding: 10px 16px; }
+  .brand h1 { font-size: 16px; }
+  .user-info { gap: 10px; }
+}
+
+@media (max-width: 480px) {
+  .topbar { padding: 8px 12px; }
+  .brand small { display: none; }
+  .user-role { display: none; }
+  .main { padding: 12px; }
+}
 </style>

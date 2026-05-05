@@ -125,4 +125,10 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 
 .dropdown-enter-active, .dropdown-leave-active { transition: all var(--duration-fast) var(--ease-out); }
 .dropdown-enter-from, .dropdown-leave-to { opacity: 0; transform: translateY(-8px); }
+
+@media (max-width: 480px) {
+  .select-wrapper { padding: 8px 10px; }
+  .label { font-size: 12px; }
+  .dropdown { max-height: 160px; }
+}
 </style>
